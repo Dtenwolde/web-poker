@@ -18,6 +18,7 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
     sio = SocketIO(app, async_mode='gevent')
+    from flaskr import mysocket
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -33,14 +34,14 @@ def create_app(test_config=None):
         pass
 
     # a simple page that says hello
-    from . import db
+    from flaskr import db
     db.init_app(app)
 
-    from . import auth
+    from flaskr import auth
     app.register_blueprint(auth.bp)
 
-    from . import blog
-    app.register_blueprint(blog.bp)
+    from flaskr import poker
+    app.register_blueprint(poker.bp)
     app.add_url_rule('/', endpoint='index')
 
 create_app()

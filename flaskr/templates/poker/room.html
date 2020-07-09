@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+
+
+{% block header %}
+  <h1>{{ room['roomName'] }} </h1>
+{% endblock %}
+
+{% block content %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>{{ room['roomName'] }}</h1>
+          <div class="about">by {{ room['username'] }} on {{ room['created'].strftime('%Y-%m-%d') }}</div>
+        </div>
+        {% if g.user['id'] == room['author_id'] %}
+          <a class="action" href="{{ url_for('poker.lobby_settings', id=room['id']) }}">Edit Settings</a>
+          <!--    TODO: SETTINGS-->
+        {% endif %}
+      </header>
+    </article>
+{% endblock %}
+
