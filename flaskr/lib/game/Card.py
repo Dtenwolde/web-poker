@@ -43,3 +43,9 @@ class Card:
         return "%s of %s" % (self.rank.name.capitalize(), self.suit.name.capitalize())
 
     __str__ = __repr__
+
+    def to_json(self):
+        return {
+            "rank": self.rank,
+            "suit": self.suit
+        }

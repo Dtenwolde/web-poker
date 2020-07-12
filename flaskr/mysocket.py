@@ -26,7 +26,8 @@ def on_join(data):
 
     # TODO: Make sure a player is only joining a room once
     user = session_user()
-    tables[room].add_player(user)
+    print(sio.id)
+    tables[room].add_player(user, sio.id)
 
     sio.emit("join", username, json=True, room=room)
     sio.emit("user_list", tables[room].export_players(), json=True, room=room)

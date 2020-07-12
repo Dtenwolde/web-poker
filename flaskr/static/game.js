@@ -1,4 +1,3 @@
-
 let canvas = document.getElementById("canvas");
 canvas.width = 1000;
 canvas.height = 600;
@@ -16,6 +15,14 @@ function getRelativeMousePosition(canvas, evt) {
     };
 }
 
+function PokerTable() {
+    this.hand = [];
+
+    this.setHand = function(data) {
+        this.hand = data;
+    }
+}
+
 // Game rendering stuff
 function render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -26,6 +33,17 @@ function render() {
     let img = images["ace_of_spades"];
     for (let i = 0; i < 5; i++) {
         placeCommunityCard(i, img);
+    }
+
+    let handCardWidth = 120;
+    let handCardHeight = 180;
+    for (let i = 0; i < pokerTable.hand.length; i++) {
+        let x = 400 + i * 100;
+        let y = 450;
+        context.fillStyle = "beige";
+        context.fillRect(x, y, handCardWidth, handCardHeight);
+        let image_name = `${pokerTable.hand[i].rank}_of_${pokerTable.hand[i].suit}`;
+        context.drawImage(images[image_name], x, y, handCardWidth, handCardHeight);
     }
 }
 
@@ -42,33 +60,54 @@ function placeCommunityCard(index, card) {
 
 canvas.addEventListener("click", (e) => console.log(getRelativeMousePosition(canvas, e)));
 
+
 let images = {};
+let pokerTable = new PokerTable();
+
 function initialize() {
+    /*
+     * Preload all images to reduce traffic later.
+     */
     const ranks = ["ace", "king", "queen", "jack", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
     const suits = ["hearts", "spades", "clubs", "diamonds"];
     let nLoads = 2;
 
     images["board"] = new Image();
-    images["board"].onload = () => { nLoads--; if (nLoads === 0) postInit() };
+    images["board"].onload = () => {
+        nLoads--;
+        if (nLoads === 0) postInit()
+    };
     images["board"].src = `/static/images/board.png`;
 
     images["cardback"] = new Image();
-    images["cardback"].onload = () => { nLoads--; if (nLoads === 0) postInit() };
+    images["cardback"].onload = () => {
+        nLoads--;
+        if (nLoads === 0) postInit()
+    };
     images["cardback"].src = `/static/images/cards/back.png`;
 
     ranks.forEach(rank => {
         suits.forEach(suit => {
             let card = `${rank}_of_${suit}`;
             images[card] = new Image();
-            images[card].onload = () => { nLoads--; if (nLoads === 0) postInit() };
+            images[card].onload = () => {
+                nLoads--;
+                if (nLoads === 0) postInit()
+            };
             images[card].src = `/static/images/cards/${card}.png`;
             nLoads++;
         });
     });
+
+    /*
+     * Register all socketio functions to the pokerTable object.
+     */
+
+    socket.on("hand", pokerTable.setHand)
 }
 
 function postInit() {
-    setInterval(render, 1000/60);
+    setInterval(render, 1000 / 60);
 }
 
 initialize();

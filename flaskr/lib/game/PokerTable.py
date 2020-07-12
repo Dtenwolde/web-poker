@@ -40,13 +40,14 @@ class PokerTable:
         else: 
             return None
 
-    def add_player(self, user: UserModel):
-
+    def add_player(self, user: UserModel, socket_id: int):
         for player in self.player_list:
             if player.user.id == user.id:
+                # If the user is already in the list, overwrite the socket id to the newest one.
+                player.socket_id = socket_id
                 return
 
-        self.player_list.append(Player(user))
+        self.player_list.append(Player(user, socket_id))
 
     def export_players(self):
         return [{
