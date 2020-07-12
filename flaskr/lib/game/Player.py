@@ -1,12 +1,12 @@
-
+from flaskr.lib.models.models import UserModel
 
 
 class Player:
     """
         Stores information about a player participating in a poker game.
     """
-    def __init__(self, username):
-        self.username = username
+    def __init__(self, user: UserModel):
+        self.user = user
 
         self.hand = []
         self.chips = {

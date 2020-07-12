@@ -1,11 +1,18 @@
+from typing import Dict
+
 from flask_socketio import join_room, leave_room, rooms
 
 from flaskr import sio
 
 
 # from flaskr.lib.poker  import Poker, Player
+from flaskr.lib.game.Player import Player
+from flaskr.lib.game.PokerTable import PokerTable
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
+
+
+tables: Dict[int, PokerTable] = {}
 
 
 @sio.on('join')
@@ -13,11 +20,16 @@ def on_join(data):
     username = data['id']
     room = int(data['room'])
     join_room(room=room)
-    print(f"User {username} joined room {room}")
 
-    print(rooms())
-    print(type(room))
+    if room not in tables:
+        tables[room] = PokerTable()
+
+    # TODO: Make sure a player is only joining a room once
+    user = session_user()
+    tables[room].player_list.append(Player(user))
+
     sio.emit("join", username, json=True, room=room)
+    sio.emit("user_list", tables[room].export_players(), json=True, room=room)
 
 
 @sio.on('leave')
