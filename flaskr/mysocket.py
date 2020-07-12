@@ -82,4 +82,13 @@ def action(data):
         sio.emit("message", "SYSTEM: Next round starting.")
 
 
+@sio.on("table_state")
+def action(data):
+    room_id = int(data.get("room"))
+
+    table = tables[room_id]
+
+    sio.emit("table_state", table.export_state(), json=True)
+
+
 print("Loaded socket")

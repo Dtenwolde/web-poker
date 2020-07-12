@@ -111,6 +111,9 @@ function initialize() {
     socket.on("hand", pokerTable.setHand);
     socket.on("table_state", pokerTable.setState);
     socket.on("message", (data) => console.log(data));
+    socket.emit("table_state", {
+        room: ROOM_ID
+    });
 }
 
 function postInit() {
