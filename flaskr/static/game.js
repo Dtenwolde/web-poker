@@ -3,7 +3,7 @@ let canvas = document.getElementById("canvas");
 canvas.width = 1000;
 canvas.height = 600;
 let context = canvas.getContext("2d");
-context.imageSmoothingEnabled = false;
+context.imageSmoothingEnabled = true;
 
 const CARD_WIDTH = 222;
 const CARD_HEIGHT = 323;
