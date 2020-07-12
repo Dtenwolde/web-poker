@@ -4,9 +4,18 @@
 {% block content %}
     <canvas id="canvas">
     </canvas>
+
+
+    <button onclick="call('call', 0)">Call</button>
+    <button onclick="raise('raise', 100)">Raise</button>
+    <button onclick="fold('fold', 0)">Fold</button>
 {% endblock %}
 
 
 {% block script %}
+    <script>
+        const ROOM_ID = '{{ room.id }}';
+
+    </script>
     <script src="{{ url_for("static", filename="game.js") }}"></script>
 {% endblock %}

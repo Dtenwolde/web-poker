@@ -110,4 +110,19 @@ function postInit() {
     setInterval(render, 1000 / 60);
 }
 
+function call(action, value) {
+    console.log("call")
+    socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
+}
+
+function raise(action, value) {
+    console.log("raise")
+    socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
+}
+
+function fold(action, value) {
+    console.log("fold")
+    socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
+}
+
 initialize();

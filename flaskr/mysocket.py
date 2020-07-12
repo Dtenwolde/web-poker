@@ -1,9 +1,9 @@
 from typing import Dict
 
-from flask_socketio import join_room, leave_room, rooms
+from flask_socketio import join_room, leave_room
 
 from flaskr import sio
-
+from flask import request
 
 # from flaskr.lib.poker  import Poker, Player
 from flaskr.lib.game.Player import Player
@@ -26,8 +26,7 @@ def on_join(data):
 
     # TODO: Make sure a player is only joining a room once
     user = session_user()
-    print(sio.id)
-    tables[room].add_player(user, sio.id)
+    tables[room].add_player(user, request.sid)
 
     sio.emit("join", username, json=True, room=room)
     sio.emit("user_list", tables[room].export_players(), json=True, room=room)
