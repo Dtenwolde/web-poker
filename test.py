@@ -2,7 +2,6 @@
 from flaskr.lib.game.PokerTable import PokerTable
 
 def main():
-
     table = PokerTable()
 
 

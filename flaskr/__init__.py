@@ -18,6 +18,7 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
+
     app.jinja_env.globals.update(session_user=session_user)
 
     sio = SocketIO(app, async_mode='gevent')
@@ -43,7 +44,7 @@ def create_app(test_config=None):
     # Import database and set it up.
     import flaskr.lib.database
     flaskr.lib.database.register_teardown(app)
-    flaskr.lib.database.init_db("sqlite:///schema.sql")
+    flaskr.lib.database.init_db("sqlite:///storage/database.sql")
 
     # Create models from model objects as defined in models.py
     flaskr.lib.database.metadata_create_all()
