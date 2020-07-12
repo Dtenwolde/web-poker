@@ -60,6 +60,7 @@ def start(data):
         return
     # Assume everybody is ready
     sio.emit("start", "None", room=room_id)
+    tables[room_id].initialize_round()
 
 
 @sio.on("action")
@@ -71,10 +72,10 @@ def action(data):
 
     player = table.get_current_player()
     if player.user.id != user.id:
-        sio.emit("message", "It is not yet your turn.")
-
+        sio.emit("message", "It is not yet your turn.", room=player.socket)
+        return
     response = table.round(data.get("action"), int(data.get("value", 0)))
-    sio.emit("message", response)
+    sio.emit("message", response, room=player.socket)
     sio.emit("table_state", table.export_state(), json=True, room=room_id)
 
     if table.check_phase_finish():

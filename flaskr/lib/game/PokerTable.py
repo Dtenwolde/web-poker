@@ -61,6 +61,8 @@ class PokerTable:
 
         self.active_player_index = self.small_blind_index
 
+        self.phase_start()
+
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
 
@@ -166,11 +168,11 @@ class PokerTable:
         else:
             return None
 
-    def add_player(self, user: UserModel, socket_id: int):
+    def add_player(self, user: UserModel, socket_id):
         for player in self.player_list:
             if player.user.id == user.id:
                 # If the user is already in the list, overwrite the socket id to the newest one.
-                player.socket_id = socket_id
+                player.socket = socket_id
                 return
 
         self.player_list.append(Player(user, socket_id))
@@ -207,12 +209,12 @@ class PokerTable:
 
     def export_state(self):
         return {
-            "small_blind": self.get_small_blind().user.name,
+            "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
             "pot": self.pot,
             "phase": self.phase.name.capitalize(),
             "active_player_index": self.active_player_index,
             "community_cards": [card.to_json() for card in self.community_cards],
-            "fold_list": [player.user.name for player in self.fold_list],
-            "caller_list": [player.user.name for player in self.caller_list],
+            "fold_list": [player.user.username for player in self.fold_list],
+            "caller_list": [player.user.username for player in self.caller_list],
         }

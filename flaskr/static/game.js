@@ -110,6 +110,7 @@ function initialize() {
 
     socket.on("hand", pokerTable.setHand);
     socket.on("table_state", pokerTable.setState);
+    socket.on("message", (data) => console.log(data));
 }
 
 function postInit() {
@@ -130,5 +131,6 @@ function fold(action, value) {
     console.log("fold")
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
+
 
 initialize();

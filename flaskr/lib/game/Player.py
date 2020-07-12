@@ -10,9 +10,9 @@ class Player:
         Stores information about a player participating in a poker game.
     """
 
-    def __init__(self, user: UserModel, socket_id: int):
+    def __init__(self, user: UserModel, socket):
         self.user = user
-        self.socket_id = socket_id
+        self.socket = socket
 
         self.hand = []
         self.chips = {
@@ -31,7 +31,7 @@ class Player:
 
     def upload_hand(self):
         hand = [hand.to_json() for hand in self.hand]
-        sio.to(self.socket_id).emit("hand", hand, json=True)
+        sio.to(self.socket).emit("hand", hand, json=True)
 
     def finish(self):
         self.hand = []

@@ -1,3 +1,4 @@
+from flaskr.lib.game import Player
 
 
 def get_value(chip: str):
@@ -23,8 +24,8 @@ def cash_in(player: Player):
     Gets current money status from the database and adds the value of all current chips in the player.
     """
 
-
     pass
+
 
 def add_chips(player: Player, chip: str, amount: int = 1):
     if amount < 1:
