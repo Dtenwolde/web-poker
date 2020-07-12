@@ -88,8 +88,8 @@ def action(data):
 
     table = tables[room_id]
     user = session_user()
-
-    sio.emit("table_state", table.export_state(user), json=True)
+    player = table.get_player(user)
+    sio.emit("table_state", table.export_state(user), json=True, room=player.socket)
 
 
 print("Loaded socket")

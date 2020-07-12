@@ -29,10 +29,6 @@ class Player:
     def deal(self, cards):
         self.hand.append(cards)
 
-    def upload_hand(self):
-        hand = [hand.to_json() for hand in self.hand]
-        sio.to(self.socket).emit("hand", hand, json=True)
-
     def finish(self):
         self.hand = []
 

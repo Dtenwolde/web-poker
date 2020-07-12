@@ -46,6 +46,6 @@ class Card:
 
     def to_json(self):
         return {
-            "rank": self.rank,
-            "suit": self.suit
+            "rank": self.rank.name.capitalize(),
+            "suit": self.suit.name.capitalize()
         }

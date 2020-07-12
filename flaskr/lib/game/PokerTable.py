@@ -163,7 +163,7 @@ class PokerTable:
             player.deal(self.take_card())
 
     def take_card(self) -> Optional[Card]:
-        if not len(self.deck):
+        if len(self.deck):
             return self.deck.pop()
         else:
             return None
@@ -182,9 +182,6 @@ class PokerTable:
             "username": player.user.username,
             "balance": player.user.balance
         } for player in self.player_list]
-
-    def deal_cards(self):
-        pass
 
     def get_small_blind(self):
         return self.player_list[self.small_blind_index]
@@ -213,7 +210,7 @@ class PokerTable:
             if player.user.id == user.id:
                 hand = player.hand
                 break
-
+        hand = [card.to_json() for card in hand]
         return {
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
@@ -223,5 +220,5 @@ class PokerTable:
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
-            "hand": [card.to_json() for card in hand]
+            "hand": hand
         }
