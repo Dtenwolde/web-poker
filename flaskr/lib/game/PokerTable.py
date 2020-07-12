@@ -69,6 +69,12 @@ class PokerTable:
         for player in self.player_list:
             player.finish()
 
+    def get_player(self, user: UserModel):
+        for player in self.player_list:
+            if player.user.id == user.id:
+                return player
+        return None
+
     def phase_start(self):
         if self.phase == Phases.PRE_FLOP:
             self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
@@ -183,9 +189,6 @@ class PokerTable:
             "balance": player.user.balance
         } for player in self.player_list]
 
-    def deal_cards(self):
-        pass
-
     def get_small_blind(self):
         return self.player_list[self.small_blind_index]
 
@@ -208,11 +211,8 @@ class PokerTable:
         self.phase_start()
 
     def export_state(self, user: UserModel):
-        hand = []
-        for player in self.player_list:
-            if player.user.id == user.id:
-                hand = player.hand
-                break
+        player = self.get_player(user)
+        hand = player.hand if player is not None else []
 
         return {
             "small_blind": self.get_small_blind().user.username,
