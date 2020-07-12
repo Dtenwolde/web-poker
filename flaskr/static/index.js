@@ -20,7 +20,7 @@ function joinRoom(userId, room, username) {
 function askPassword(password, room_id) {
     console.log("got here")
     let input = prompt("Password: ")
-    while (input != password) {
+    while (input !== password) {
         if (input === null) {
             return
         }

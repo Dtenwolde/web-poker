@@ -19,4 +19,7 @@ class Player:
         }
 
     def deal(self, cards):
-        self.hand = cards
+        self.hand.append(cards)
+
+    def finish(self):
+        self.hand = []

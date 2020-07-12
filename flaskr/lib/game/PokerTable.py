@@ -26,6 +26,14 @@ class PokerTable:
         random.shuffle(deck)
         return deck
 
+    def deal_cards(self):
+        # First round
+        for player in self.player_list:
+            player.deal(self.take_card())
+
+        for player in self.player_list:
+            player.deal(self.take_card())
+
     def take_card(self) -> Optional[Card]:
         if not len(self.deck):
             return self.deck.pop()
