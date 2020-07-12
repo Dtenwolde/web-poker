@@ -6,18 +6,16 @@ from flaskr.lib.models.models import UserModel
 from flaskr.lib.repository import user_repository
 
 
-def session_user() -> UserModel:
+def session_user() -> Optional[UserModel]:
     """
     Return the current authenticated user.
     :return: the current authenticated user.
     :return: None if no user is logged in.
     """
-
     user_id = session['user_id'] if 'user_id' in session else None
     if user_id is not None:
         if not hasattr(flaskg, 'session_user'):
             flaskg.session_user = user_repository.get_user(user_id=user_id)
-
             if flaskg.session_user is None:
                 del session['user_id']
 

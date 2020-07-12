@@ -1,16 +1,15 @@
 import functools
 
+import bcrypt
+from flask import (
+    Blueprint, flash, redirect, render_template, request, url_for
+)
+
+from flaskr.lib.database import request_session
+from flaskr.lib.models.models import UserModel
 from flaskr.lib.repository import user_repository
 from flaskr.lib.user_session import session_user_set, session_is_authed
-from flaskr.lib.models.models import UserModel
-import bcrypt
 
-from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
-)
-from werkzeug.security import check_password_hash, generate_password_hash
-from flaskr.lib.database import request_session
-from werkzeug.exceptions import Unauthorized
 
 def require_login():
     def decorator(f):
@@ -28,21 +27,21 @@ def require_login():
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        
+
         db = request_session()
-        error = None
 
         if not username:
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
         else:
-            usermodel = user_repository.get_user(username=username)  
+            usermodel = user_repository.get_user(username=username)
             if usermodel is not None:
                 error = 'User {} is already registered.'.format(username)
             else:
@@ -57,13 +56,13 @@ def register():
 
     return render_template('auth/register.html')
 
+
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        sqlalchemy_db = request_session()
         usermodel = user_repository.get_user(username=username)
         error = None
         if usermodel is None:
@@ -80,11 +79,8 @@ def login():
     return render_template('auth/login.html')
 
 
-
 @bp.route('/logout')
 @require_login()
 def logout():
     session_user_set(None)
     return redirect(url_for('index'))
-
-

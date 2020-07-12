@@ -4,9 +4,8 @@
 <nav>
   <h1>Poker</h1>
   <ul>
-    <li> {{ session_user() }} </li>
     {% if session_user() is not none %}
-      <li><span>"Hallo: "{{ session_user().username }}</span>
+      <li><span>{{ session_user().username }}</span>
       <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
     {% else %}
       <li><a href="{{ url_for('auth.register') }}">Register</a>

@@ -6,12 +6,13 @@ from flaskr.lib.database import request_session
 from datetime import datetime
 import bcrypt
 
+
 class UserModel(OrmModelBase):
     """
     Database usermodel also used to login, and store money
     """
     __tablename__ = "user"
-    __table_args__ = {'extend_existing': True} 
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer(), primary_key=True, autoincrement=True)
 
@@ -33,7 +34,7 @@ class UserModel(OrmModelBase):
         Tries to pay the cost with the current balance
         If it can do so, returns True, otherwise False
         """
-        
+
         if self.balance > cost:
             self.balance -= cost
             db = request_session()
@@ -41,24 +42,24 @@ class UserModel(OrmModelBase):
             return True
         return False
 
-class Room(OrmModelBase):
+
+class RoomModel(OrmModelBase):
     """
     Stores information about a room in which poker games are being played
     """
     __tablename__ = "room"
-    __table_args__ = {'extend_existing': True} 
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer(), primary_key=True, autoincrement=True)
-    room = Column(String(), nullable=False)
-    
+    name = Column(String(), nullable=False)
+
     author_id = Column(Integer(), ForeignKey("user.id"), nullable=False)
-    author = relationship("UserModel") 
+    author = relationship("UserModel")
 
     created = Column(DateTime(), nullable=False, default=datetime.now())
     temp_password = Column(String(), nullable=False)
 
-    def __init__(self, room: str, author: UserModel, temp_password: str = ""):
+    def __init__(self, name: str, author: UserModel, temp_password: str = ""):
         self.temp_password = temp_password
-        self.room = room
+        self.name = name
         self.author_id = author.id
-    

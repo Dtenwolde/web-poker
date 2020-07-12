@@ -12,15 +12,12 @@
     <article class="post">
       <header>
         <div>
-          <h1>{{ room['roomName'] }}</h1>
-          <div class="about">by {{ room['username'] }} on {{ room['created'].strftime('%Y-%m-%d') }}</div>
+          <h1>{{ room.name }}</h1>
+          <div class="about">by {{ room.author.username }} on {{ room.created.strftime('%Y-%m-%d') }}</div>
         </div>
-        {% if session_user().id == room['author_id'] %}
-          <a class="action" href="{{ url_for('poker.update', id=room['id']) }}">Edit</a>
-        {% endif %}
-        <a class="action" href="{{ url_for('poker.join', id=room['id']) }}">Join</a>
+        <a class="action" href="{{ url_for('poker.join', room_id=room.id) }}">Join</a>
       </header>
-      <p class="body">{{ room['temp_password'] }}</p>
+      <p class="body">Current password: {{ room.temp_password }}</p>
     </article>
     {% if not loop.last %}
       <hr>

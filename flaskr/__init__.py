@@ -49,11 +49,6 @@ def create_app(test_config=None):
     # Create models from model objects as defined in models.py
     flaskr.lib.database.metadata_create_all()
 
-
-    # a simple page that says hello
-    from flaskr import db
-    db.init_app(app)
-
     from flaskr import auth
     app.register_blueprint(auth.bp)
 

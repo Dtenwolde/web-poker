@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{{ room['roomName'] }} </h1>
+  <h1>{{ room.name }} </h1>
 {% endblock %}
 
 {% block content %}
     <article class="post">
       <header>
         <div>
-          <h1>{{ room['roomName'] }}</h1>
-          <div class="about">Room leader: {{ room['username'] }}</div>
+          <h1>{{ room.name }}</h1>
+          <div class="about">Room leader: {{ room.author.username }}</div>
 
         </div>
-        {% if g.user['id'] == room['author_id'] %}
-          <a class="action" href="{{ url_for('poker.room_settings', id=room['id']) }}">Edit Settings</a>
-          <a class="action" href="{{ url_for('poker.game', id=room['id']) }}">Start Game</a>
+        {% if session_user().id == room['author_id'] %}
+          <a class="action" href="{{ url_for('poker.room_settings', room_id=room.id) }}">Edit Settings</a>
+          <a class="action" href="{{ url_for('poker.game', room_id=room.id) }}">Start Game</a>
           <!--    TODO: SETTINGS-->
         {% endif %}
       </header>
       <ul id="messages"></ul>
       <form id="messageform" method="post">
         <input id="m" autocomplete="off" />
-        <input id="roomid" type="hidden" value="{{ room['id'] }}"/>
-        <input id="username" type="hidden" value="{{ g.user['username'] }}"/>
+        <input id="roomid" type="hidden" value="{{ room.id }}"/>
+        <input id="username" type="hidden" value="{{ session_user().username }}"/>
         <button>Send</button>
       </form>
     </article>
@@ -31,9 +31,9 @@
 
 {% block script %}
   <script>
-    const ROOM_ID = {{ room['id'] }}
-    console.log(typeof {{ g.user }} )
-    joinRoom({{ g.user['id'] }}, ROOM_ID);
+    const ROOM_ID = "{{ room.id }}";
+
+    joinRoom({{ session_user().id }}, ROOM_ID);
   </script>
 {% endblock %}
 
