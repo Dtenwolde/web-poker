@@ -72,7 +72,7 @@ def action(data):
 
     player = table.get_current_player()
     if player.user.id != user.id:
-        sio.emit("message", "It is not yet your turn.")
+        sio.to(player.socket_id).emit("message", "It is not yet your turn.")
 
     response = table.round(data.get("action"), int(data.get("value", 0)))
     sio.emit("message", response)
@@ -80,6 +80,15 @@ def action(data):
 
     if table.check_phase_finish():
         sio.emit("message", "SYSTEM: Next round starting.")
+
+
+@sio.on("table_state")
+def action(data):
+    room_id = int(data.get("room"))
+
+    table = tables[room_id]
+
+    sio.emit("table_state", table.export_state(), json=True)
 
 
 print("Loaded socket")
