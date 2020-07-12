@@ -14,10 +14,10 @@ class PokerTable:
     def __init__(self):
         self.player_list: List[Player] = []
         self.deck = self.deck_generator()
-
+    
     def deck_generator(self):
         deck = []
-
+        
         for suit in [suit for suit in dir(CardSuits) if not suit.startswith("__")]:
             for rank in [rank for rank in dir(CardRanks) if not rank.startswith("__")]:
                 deck.append(Card(CardRanks[rank], CardSuits[suit]))
@@ -37,15 +37,19 @@ class PokerTable:
     def take_card(self) -> Optional[Card]:
         if not len(self.deck):
             return self.deck.pop()
-        else:
+        else: 
             return None
 
     def add_player(self, user: UserModel):
-        if user not in self.player_list:
-            self.player_list.append(Player(user))
+
+        for player in self.player_list:
+            if player.user.id == user.id:
+                return
+
+        self.player_list.append(Player(user))
 
     def export_players(self):
         return [{
-            "name": player.user.username,
+            "username": player.user.username,
             "balance": player.user.balance
         } for player in self.player_list]

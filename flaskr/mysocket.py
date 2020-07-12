@@ -56,10 +56,10 @@ def start(data):
 
     # Only the owner may start the game
     if room.author.id != session_user().id:
+        print(room.author.id, session_user().id)
         return
-
     # Assume everybody is ready
-    sio.emit("start", "None", room=room)
+    sio.emit("start", "None", room=room_id)
 
 
 print("Loaded socket")
