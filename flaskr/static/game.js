@@ -108,8 +108,12 @@ function initialize() {
      * Register all socketio functions to the pokerTable object.
      */
 
-    socket.on("hand", pokerTable.setHand);
-    socket.on("table_state", pokerTable.setState);
+    socket.on("hand", (data) => {
+        pokerTable.setHand(data);
+    });
+    socket.on("table_state", (data) => {
+        pokerTable.setState(data);
+    });
     socket.on("message", (data) => console.log(data));
     socket.emit("table_state", {
         room: ROOM_ID

@@ -87,7 +87,7 @@ def action(data):
     room_id = int(data.get("room"))
 
     table = tables[room_id]
-
+    print(table.export_state())
     sio.emit("table_state", table.export_state(), json=True)
 
 
