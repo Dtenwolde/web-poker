@@ -63,4 +63,23 @@ def start(data):
     sio.emit("start", "None", room=room_id)
 
 
+@sio.on("action")
+def action(data):
+    room_id = int(data.get("room"))
+
+    table = tables[room_id]
+    user = session_user()
+
+    player = table.get_current_player()
+    if player.user.id != user.id:
+        sio.emit("message", "It is not yet your turn.")
+
+    response = table.round(data.get("action"), data.get("value", 0))
+    sio.emit("message", response)
+
+    if table.check_phase_finish():
+        sio.emit("message", "SYSTEM: Next round starting.")
+
+
+
 print("Loaded socket")
