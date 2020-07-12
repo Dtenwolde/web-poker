@@ -207,7 +207,13 @@ class PokerTable:
         # Start new phase
         self.phase_start()
 
-    def export_state(self):
+    def export_state(self, user: UserModel):
+        hand = []
+        for player in self.player_list:
+            if player.user.id == user.id:
+                hand = player.hand
+                break
+
         return {
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
@@ -217,4 +223,5 @@ class PokerTable:
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
+            "hand": [card.to_json() for card in hand]
         }
