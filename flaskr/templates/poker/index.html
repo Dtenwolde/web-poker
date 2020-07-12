@@ -2,7 +2,7 @@
 
 {% block header %}
   <h1>{% block title %}Rooms{% endblock %}</h1>
-  {% if g.user %}
+  {% if session_user() %}
     <a class="action" href="{{ url_for('poker.create') }}">New</a>
   {% endif %}
 {% endblock %}
@@ -15,10 +15,10 @@
           <h1>{{ room['roomName'] }}</h1>
           <div class="about">by {{ room['username'] }} on {{ room['created'].strftime('%Y-%m-%d') }}</div>
         </div>
-        {% if g.user['id'] == room['author_id'] %}
+        {% if session_user().id == room['author_id'] %}
           <a class="action" href="{{ url_for('poker.update', id=room['id']) }}">Edit</a>
         {% endif %}
-        <a class="action" href="{{ url_for('poker.join', id=room['id']) }}" onClick="joinRoom({{ g.user['id'] }}, {{ room['id'] }} )">Join</a>
+        <a class="action" href="{{ url_for('poker.join', id=room['id']) }}">Join</a>
       </header>
       <p class="body">{{ room['temp_password'] }}</p>
     </article>

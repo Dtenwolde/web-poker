@@ -1,16 +1,32 @@
 let socket = io();
 
-socket.on("join", function(data) {
-    users[data] = "Temp";
-    console.log("Socket detected");
+socket.on("join",(data) => {
+    console.log("New user detected: " + data);
 });
 
-function joinRoom(user, room) {
+function joinRoom(userId, room, username) {
     socket.emit("join", {
         "room": room,
-        "username": user
+        "id": userId,
     });
-    console.log(user, room)
+    $( ".about" ).append("<p>" + username + "</p>");
 }
 // socket.emit('join', { 'room': room, .. }}
 // socket.emit('send message', {'message': message, 'channel': channel});
+
+$('#messageform').submit(function(e){
+    e.preventDefault(); // prevents page reloading
+    console.log("prevented default");
+    data = {"message": $('#m').val(),
+            "room": $('#roomid').val(),
+            "username": $('#username').val()
+           }
+    socket.emit('chat message', data);
+    $('#m').val('');
+    return false;
+});
+
+socket.on("chat message", (data) => {
+    console.log(data);
+    $('#messages').append($('<li>').text(data.username + ": " + data.message));
+})

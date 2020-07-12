@@ -4,13 +4,13 @@ from flask import (
 from flaskr import app
 from werkzeug.exceptions import abort
 
-from flaskr.auth import login_required
+from flaskr.auth import require_login
 from flaskr.db import get_db
 
 bp = Blueprint('poker', __name__)
 
 @app.route('/')
-@login_required
+@require_login()
 def index():
     db = get_db()
     rooms = db.execute(
@@ -22,7 +22,7 @@ def index():
 
 
 @bp.route('/create', methods=('GET', 'POST'))
-@login_required
+@require_login()
 def create():
     if request.method == 'POST':
         roomName = request.form['roomName']
@@ -54,12 +54,12 @@ def get_room(id, check_author=True):
         (id,)
     ).fetchone()
     if room is None:
-        abort(404, "Post id {0} doesn't exist.".format(id))
+        abort(404, "Room id {0} doesn't exist.".format(id))
 
     return room
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
-@login_required
+@require_login()
 def update(id):
     post = get_room(id)
 
@@ -74,20 +74,20 @@ def update(id):
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            db.execute(
-                'UPDATE post SET title = ?, body = ?'
-                ' WHERE id = ?',
-                (title, body, id)
-            )
-            db.commit()
+            # db = get_db()
+            # db.execute(
+            #     'UPDATE room SET title = ?, body = ?'
+            #     ' WHERE id = ?',
+            #     (title, body, id)
+            # )
+            # db.commit()
             return redirect(url_for('poker.index'))
 
     return render_template('poker/update.html', room=post)
 
 
 @bp.route('/<int:id>/delete', methods=('POST',))
-@login_required
+@require_login()
 def delete(id):
     get_room(id)
     db = get_db()
@@ -97,13 +97,20 @@ def delete(id):
 
 
 @bp.route('/<int:id>/join', methods=('GET', 'POST'))
-@login_required
+@require_login()
 def join(id):
     room = get_room(id)
     return render_template('poker/room.html', room=room)
 
-@bp.route('/<int:id>/lobbySettings', methods=('GET',))
-@login_required
-def lobby_settings(id):
+@bp.route('/<int:id>/roomSettings', methods=('GET',))
+@require_login()
+def room_settings(id):
     room = get_room(id)
-    return render_template('poker/room.html', room=room)
+    return render_template('poker/room_settings.html', room=room)
+
+@bp.route('/<int:id>/game', methods=('GET',))
+@require_login()
+def game(id):
+    room = get_room(id)
+    return render_template('poker/game.html', room=room)
+

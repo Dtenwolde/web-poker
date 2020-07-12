@@ -1,8 +1,9 @@
 import os
-from flask_socketio import SocketIO
 
 from flask import Flask
+from flask_socketio import SocketIO
 
+from flaskr.lib.user_session import session_user
 
 global app
 global sio
@@ -17,6 +18,8 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
+    app.jinja_env.globals.update(session_user=session_user)
+
     sio = SocketIO(app, async_mode='gevent')
     from flaskr import mysocket
 
@@ -32,6 +35,19 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+
+    # Import database and setup all required
+    import flaskr.lib.models.models
+
+    # Import database and set it up.
+    import flaskr.lib.database
+    flaskr.lib.database.register_teardown(app)
+    flaskr.lib.database.init_db("sqlite:///schema.sql")
+
+    # Create models from model objects as defined in models.py
+    flaskr.lib.database.metadata_create_all()
+
 
     # a simple page that says hello
     from flaskr import db
