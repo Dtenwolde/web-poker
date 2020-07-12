@@ -5,11 +5,13 @@ socket.on("join", (data) => {
 });
 
 socket.on("user_list", (data) => {
-
-
+    console.log(data)
+    data.forEach(player => {
+        $(".about").append('<p>' + player.username + '-' + player.balance + '</p>');
+    })
 });
 
-function joinRoom(userId, room, username) {
+function joinRoom(userId, room) {
     socket.emit("join", {
         "room": room,
         "id": userId,

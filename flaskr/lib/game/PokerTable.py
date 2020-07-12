@@ -31,6 +31,6 @@ class PokerTable:
 
     def export_players(self):
         return [{
-            "name": player.user.username,
-            "chips": player.chips
+            "username": player.user.username,
+            "balance": player.user.balance
         } for player in self.player_list]
