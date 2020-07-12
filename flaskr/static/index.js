@@ -4,16 +4,31 @@ socket.on("join", (data) => {
     console.log("New user detected: " + data);
 });
 
+socket.on("user_list", (data) => {
+
+
+});
+
 function joinRoom(userId, room, username) {
     socket.emit("join", {
         "room": room,
         "id": userId,
     });
-    $(".about").append("<p>" + username + "</p>");
+
 }
 
-// socket.emit('join', { 'room': room, .. }}
-// socket.emit('send message', {'message': message, 'channel': channel});
+function askPassword(password, room_id) {
+    console.log("got here")
+    let input = prompt("Password: ")
+    while (input != password) {
+        if (input === null) {
+            return
+        }
+        input = prompt("Password incorrect, please try again: ")
+    }
+
+    window.location.replace(`/${room_id}/join`)
+}
 
 $('#messageform').submit(function(e) {
     e.preventDefault(); // prevents page reloading
