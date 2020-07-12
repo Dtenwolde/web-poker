@@ -17,10 +17,15 @@ function getRelativeMousePosition(canvas, evt) {
 
 function PokerTable() {
     this.hand = [];
+    this.state = {};
 
     this.setHand = function(data) {
         this.hand = data;
-    }
+    };
+
+    this.setState = function(data) {
+        this.state = data;
+    };
 }
 
 // Game rendering stuff
@@ -103,7 +108,8 @@ function initialize() {
      * Register all socketio functions to the pokerTable object.
      */
 
-    socket.on("hand", pokerTable.setHand)
+    socket.on("hand", pokerTable.setHand);
+    socket.on("table_state", pokerTable.setState);
 }
 
 function postInit() {

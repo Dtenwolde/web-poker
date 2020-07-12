@@ -204,3 +204,15 @@ class PokerTable:
 
         # Start new phase
         self.phase_start()
+
+    def export_state(self):
+        return {
+            "small_blind": self.get_small_blind().user.name,
+            "current_call_value": self.current_call_value,
+            "pot": self.pot,
+            "phase": self.phase.name.capitalize(),
+            "active_player_index": self.active_player_index,
+            "community_cards": [card.to_json() for card in self.community_cards],
+            "fold_list": [player.user.name for player in self.fold_list],
+            "caller_list": [player.user.name for player in self.caller_list],
+        }

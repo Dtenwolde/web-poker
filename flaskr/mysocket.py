@@ -74,12 +74,12 @@ def action(data):
     if player.user.id != user.id:
         sio.emit("message", "It is not yet your turn.")
 
-    response = table.round(data.get("action"), data.get("value", 0))
+    response = table.round(data.get("action"), int(data.get("value", 0)))
     sio.emit("message", response)
+    sio.emit("table_state", table.export_state(), json=True, room=room_id)
 
     if table.check_phase_finish():
         sio.emit("message", "SYSTEM: Next round starting.")
-
 
 
 print("Loaded socket")
