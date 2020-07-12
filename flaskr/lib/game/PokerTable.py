@@ -38,19 +38,28 @@ class PokerTable:
         random.shuffle(deck)
         return deck
 
+    def deal_cards(self):
+        # First round
+        for player in self.player_list:
+            player.deal(self.take_card())
+
+        for player in self.player_list:
+            player.deal(self.take_card())
+
     def take_card(self) -> Optional[Card]:
         if not len(self.deck):
             return self.deck.pop()
         else: 
             return None
 
-    def add_player(self, user: UserModel):
-
+    def add_player(self, user: UserModel, socket_id: int):
         for player in self.player_list:
             if player.user.id == user.id:
+                # If the user is already in the list, overwrite the socket id to the newest one.
+                player.socket_id = socket_id
                 return
 
-        self.player_list.append(Player(user))
+        self.player_list.append(Player(user, socket_id))
 
     def export_players(self):
         return [{

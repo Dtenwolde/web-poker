@@ -5,8 +5,9 @@ class Player:
     """
         Stores information about a player participating in a poker game.
     """
-    def __init__(self, user: UserModel):
+    def __init__(self, user: UserModel, socket_id: int):
         self.user = user
+        self.socket_id = socket_id
 
         self.hand = []
         self.chips = {
@@ -19,4 +20,7 @@ class Player:
         }
 
     def deal(self, cards):
-        self.hand = cards
+        self.hand.append(cards)
+
+    def finish(self):
+        self.hand = []
