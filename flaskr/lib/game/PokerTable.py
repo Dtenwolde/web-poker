@@ -3,11 +3,14 @@ from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
 from typing import Optional, List
 
+from flaskr.lib.models.models import UserModel
+
 
 class PokerTable:
     """
     Stores information about the poker game being played
     """
+
     def __init__(self):
         self.player_list: List[Player] = []
         self.deck = self.deck_generator()
@@ -28,6 +31,14 @@ class PokerTable:
             return self.deck.pop()
         else: 
             return None
+
+    def add_player(self, user: UserModel):
+
+        for player in self.player_list:
+            if player.user.id == user.id:
+                return
+
+        self.player_list.append(Player(user))
 
     def export_players(self):
         return [{

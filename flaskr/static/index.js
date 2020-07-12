@@ -5,9 +5,9 @@ socket.on("join", (data) => {
 });
 
 socket.on("user_list", (data) => {
-    console.log(data)
+    $(".about").empty()
     data.forEach(player => {
-        $(".about").append('<p>' + player.username + '-' + player.balance + '</p>');
+        $(".about").append('<p>' + player.username + ' - ' + player.balance + '</p>');
     })
 });
 
@@ -55,6 +55,7 @@ socket.on("start", (data) => {
 });
 
 function startRoom() {
+    console.log("got here")
     socket.emit("start", {
         room: ROOM_ID
     });

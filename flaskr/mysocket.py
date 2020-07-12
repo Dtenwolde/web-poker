@@ -26,7 +26,7 @@ def on_join(data):
 
     # TODO: Make sure a player is only joining a room once
     user = session_user()
-    tables[room].player_list.append(Player(user))
+    tables[room].add_player(user)
 
     sio.emit("join", username, json=True, room=room)
     sio.emit("user_list", tables[room].export_players(), json=True, room=room)
@@ -56,10 +56,10 @@ def start(data):
 
     # Only the owner may start the game
     if room.author.id != session_user().id:
+        print(room.author.id, session_user().id)
         return
-
     # Assume everybody is ready
-    sio.emit("start", "None", room=room)
+    sio.emit("start", "None", room=room_id)
 
 
 print("Loaded socket")

@@ -6,11 +6,11 @@
 
 {% block content %}
     <article class="post">
-      <header>
-        <div>
-          <h1>{{ room.name }}</h1>
-          <h1>Share this code: {{ room.temp_password }}</h1>
-          <div class="about">Room leader: {{ room.author.username }}</div>
+        <header>
+            <div>
+                <h1>{{ room.name }}</h1>
+                <h1>Share this code: {{ room.temp_password }}</h1>
+                <div class="about">Room leader: {{ room.author.username }}</div>
 
             </div>
             {% if session_user().id == room['author_id'] %}
@@ -31,11 +31,11 @@
 {% endblock %}
 
 {% block script %}
-  <script>
-    const ROOM_ID = "{{ room.id }}";
-    const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
-    joinRoom({{ session_user().id }}, ROOM_ID, '{{ session_user().username }}' );
-  </script>
+    <script>
+        const ROOM_ID = "{{ room.id }}";
+        const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
+        joinRoom({{ session_user().id }}, ROOM_ID, '{{ session_user().username }}');
+    </script>
 {% endblock %}
 
 
