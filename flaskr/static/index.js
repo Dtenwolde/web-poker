@@ -29,6 +29,16 @@ $('#messageform').submit(function(e) {
 });
 
 socket.on("chat message", (data) => {
-    console.log(data);
     $('#messages').append($('<li>').text(data.username + ": " + data.message));
-})
+});
+
+socket.on("start", (data) => {
+    console.log(data);
+    document.location.replace(GAME_URL);
+});
+
+function startRoom() {
+    socket.emit("start", {
+        room: ROOM_ID
+    });
+}

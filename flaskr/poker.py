@@ -74,4 +74,5 @@ def room_settings(room_id):
 @require_login()
 def game(room_id):
     room = get_room(room_id)
+
     return render_template('poker/game.html', room=room)

@@ -14,7 +14,7 @@
         </div>
         {% if session_user().id == room['author_id'] %}
           <a class="action" href="{{ url_for('poker.room_settings', room_id=room.id) }}">Edit Settings</a>
-          <a class="action" href="{{ url_for('poker.game', room_id=room.id) }}">Start Game</a>
+          <a class="action" href="javascript:void(0);" onclick="startRoom()">Start Game</a>
           <!--    TODO: SETTINGS-->
         {% endif %}
       </header>
@@ -32,7 +32,7 @@
 {% block script %}
   <script>
     const ROOM_ID = "{{ room.id }}";
-
+    const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
     joinRoom({{ session_user().id }}, ROOM_ID);
   </script>
 {% endblock %}

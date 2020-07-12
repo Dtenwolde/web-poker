@@ -11,10 +11,10 @@ class Player:
         self.hand = []
         self.chips = {
             "black": 0,
-            "green": 1
-            "blue": 1
-            "red": 0
-            "pink": 1
+            "green": 1,
+            "blue": 1,
+            "red": 0,
+            "pink": 1,
             "white": 1
         }
 

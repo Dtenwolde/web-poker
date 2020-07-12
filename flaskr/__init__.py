@@ -37,7 +37,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-
     # Import database and setup all required
     import flaskr.lib.models.models
 
@@ -55,5 +54,6 @@ def create_app(test_config=None):
     from flaskr import poker
     app.register_blueprint(poker.bp)
     app.add_url_rule('/', endpoint='index')
+
 
 create_app()

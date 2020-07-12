@@ -1,1 +1,12 @@
 {% extends 'base.html' %}
+
+
+{% block content %}
+    <canvas id="canvas">
+    </canvas>
+{% endblock %}
+
+
+{% block script %}
+    <script src="{{ url_for("static", "game.js") }}"></script>
+{% endblock %}

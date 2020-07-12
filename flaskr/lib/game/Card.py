@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CardRanks(Enum):
     ACE = 0
     KING = 1
@@ -14,6 +15,7 @@ class CardRanks(Enum):
     FOUR = 4
     THREE = 3
     TWO = 2
+
 
 class CardSuits(Enum):
     SPADES = 0
