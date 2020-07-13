@@ -12,3 +12,5 @@ if __name__ == "__main__":
     http_server = WebSocketServer((host, port), flaskr.app, debug=True)
     http_server.serve_forever()
     # app.run(threaded=True, host='localhost', port='5000', debug=True)
+
+

@@ -39,21 +39,22 @@ class Player:
         :param current_call_value:
         :return:
         """
-        paid = self.current_call_value
+        paid = current_call_value
 
         chips = defaultdict(int)
         chip_idx = 0
         while paid < current_call_value:
             key = list(self.chips.keys())[chip_idx]
             value = get_value(key)
-
+            print(key, value, paid)
             while value < paid and self.chips[key] > 0:
                 paid -= value
                 chips[key] += 1
                 self.chips[key] -= 1
 
+
             chip_idx += 1
-            if chip_idx > len(self.chips.keys()):
+            if chip_idx == len(self.chips.keys()):
                 return None
 
         self.current_call_value = current_call_value

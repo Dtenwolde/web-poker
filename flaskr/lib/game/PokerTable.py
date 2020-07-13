@@ -101,15 +101,15 @@ class PokerTable:
     def round(self, action: str, value: int = 0):
         message = None
         player = self.get_current_player()
-        print(action, self.first)
         if self.first and self.get_small_blind() == player:
             print("Got to small blind")
             # TODO Fix this
             self.first = False
-            chips = player.pay(value)
+            chips = player.pay(200) # Current small blind
             if chips is not None:
                 self.add_pot(chips)
-                self.current_call_value = 2
+                self.current_call_value = 200 # In cents
+                print(f"Updated current call value {self.current_call_value}")
                 message = "Started round successfully."
             else:
                 raise ValueError("Programmer error: please check the player balances before starting the next round.")
@@ -139,6 +139,7 @@ class PokerTable:
             message = "Folded."
 
         self.increment_player()
+        print("got here")
         return message
 
     def increment_player(self):
@@ -179,8 +180,11 @@ class PokerTable:
             return None
 
     def add_player(self, user: UserModel, socket_id):
+        print(user.id, user.username)
         for player in self.player_list:
+
             if player.user.id == user.id:
+                print("got here")
                 # If the user is already in the list, overwrite the socket id to the newest one.
                 player.socket = socket_id
                 return
