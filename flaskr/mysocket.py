@@ -76,8 +76,9 @@ def action(data):
         return
     response = table.round(data.get("action"), int(data.get("value", 0)))
     sio.emit("message", response, room=player.socket)
-    print(table.export_state(user))
-    sio.emit("table_state", table.export_state(user), json=True, room=player.socket)
+
+    for table_player in table.player_list:
+        sio.emit("table_state", table.export_state(table_player), json=True, room=table_player.socket)
 
     if table.check_phase_finish():
         sio.emit("message", "SYSTEM: Next round starting.")
@@ -90,8 +91,7 @@ def action(data):
     table = tables[room_id]
     user = session_user()
     player = table.get_player(user)
-    print(player, player.socket)
-    sio.emit("table_state", table.export_state(user), json=True, room=player.socket)
+    sio.emit("table_state", table.export_state(player), json=True, room=player.socket)
 
 
 print("Loaded socket")
