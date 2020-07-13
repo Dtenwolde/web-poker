@@ -8,6 +8,9 @@ from typing import Optional, List
 from flaskr.lib.models.models import UserModel
 
 
+SMALL_BLIND_CALL_VALUE = 200
+
+
 class Phases(Enum):
     NOT_YET_STARTED = 0
     PRE_FLOP = 1
@@ -76,10 +79,9 @@ class PokerTable:
         return None
 
     def phase_start(self):
+        print("Starting phase", self.phase.name)
         if self.phase == Phases.PRE_FLOP:
-            print("got here")
-            small_blind = self.get_small_blind()
-            big_blind = self.get_big_blind()
+            self.first = True
         elif self.phase == Phases.FLOP:
             # Flop deals 3 cards
             self.community_cards.append(self.take_card())
@@ -94,43 +96,45 @@ class PokerTable:
 
     def fold(self, player: Player):
         self.fold_list.append(player)
-        print(self.fold_list, self.player_list)
         if len(self.fold_list) == len(self.player_list) - 1:
             print("Only one player remains")
 
     def round(self, action: str, value: int = 0):
         message = None
         player = self.get_current_player()
-        if self.first and self.get_small_blind() == player:
-            print("Got to small blind")
-            # TODO Fix this
+        if self.first:
+            if self.get_small_blind() != player:
+                raise ValueError("The small blind was not the first player to do an action.")
+
             self.first = False
-            chips = player.pay(200) # Current small blind
+            chips = player.pay(SMALL_BLIND_CALL_VALUE)  # Current small blind
             if chips is not None:
                 self.add_pot(chips)
-                self.current_call_value = 200 # In cents
-                print(f"Updated current call value {self.current_call_value}")
+                self.current_call_value = SMALL_BLIND_CALL_VALUE * 2  # In cents
                 message = "Started round successfully."
             else:
                 raise ValueError("Programmer error: please check the player balances before starting the next round.")
 
         elif action == "call":
             chips = player.pay(self.current_call_value)
+            print(chips)
             if chips is not None:
                 self.add_pot(chips)
                 self.caller_list.append(player)
-                message = "Successfully called."
+                message = "Successfully called %d." % self.current_call_value
             else:
                 self.fold(player)
                 message = "Folded, not enough currency to match the call value."
 
         elif action == "raise":
+            if value < 100:
+                return "Minimum raise is 1 euro."
             chips = player.pay(value)
             if chips is not None:
                 self.add_pot(chips)
-                self.current_call_value = value
+                self.current_call_value += value
                 self.caller_list = [player]
-                message = "Raised successfully."
+                message = "Raised by %d." % value
             else:
                 return "Cannot raise by %d." % value
 
@@ -139,7 +143,9 @@ class PokerTable:
             message = "Folded."
 
         self.increment_player()
-        print("got here")
+
+        print(message)
+        self.check_phase_finish()
         return message
 
     def increment_player(self):
@@ -180,11 +186,9 @@ class PokerTable:
             return None
 
     def add_player(self, user: UserModel, socket_id):
-        print(user.id, user.username)
         for player in self.player_list:
 
             if player.user.id == user.id:
-                print("got here")
                 # If the user is already in the list, overwrite the socket id to the newest one.
                 player.socket = socket_id
                 return
@@ -204,16 +208,15 @@ class PokerTable:
         return self.player_list[(self.small_blind_index + 1) % len(self.player_list)]
 
     def add_pot(self, chips):
-        self.pot = {k: self.pot.get(k, 0) + chips.get(k, 0) for k in set(chips)}
+        self.pot = {k: self.pot.get(k, 0) + chips.get(k, 0) for k in set(chips) | set(self.pot)}
 
     def check_phase_finish(self):
         if len(self.player_list) != len(self.fold_list) + len(self.caller_list):
             return False
 
-        # TODO: Dani mag rekenen
-        self.small_blind_index = (self.small_blind_index + 1)
-
         self.phase = Phases(self.phase.value + 1)
+
+        self.caller_list = []
 
         # Start new phase
         self.phase_start()

@@ -14,7 +14,7 @@ def get_value(chip: str):
     if chip == "red":
         return 500
     if chip == "pink":
-        return 250
+        return 200
     if chip == "white":
         return 100
 

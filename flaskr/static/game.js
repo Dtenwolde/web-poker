@@ -119,6 +119,7 @@ function initialize() {
         console.log(data);
     });
 
+
     socket.emit("table_state", {
         room: ROOM_ID
     });
