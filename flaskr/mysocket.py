@@ -17,7 +17,6 @@ tables: Dict[int, PokerTable] = {}
 
 @sio.on('join')
 def on_join(data):
-    username = data['id']
     room = int(data['room'])
     join_room(room=room)
 
@@ -28,7 +27,7 @@ def on_join(data):
     user = session_user()
     tables[room].add_player(user, request.sid)
 
-    sio.emit("join", username, json=True, room=room)
+    sio.emit("join", user.username, json=True, room=room)
     sio.emit("user_list", tables[room].export_players(), json=True, room=room)
 
 
@@ -70,13 +69,15 @@ def action(data):
     table = tables[room_id]
     user = session_user()
 
-    player = table.get_current_player()
-    if player.user.id != user.id:
+    current_player = table.get_current_player()
+    player = table.get_player(user)
+    if current_player.user.id != user.id:
         sio.emit("message", "It is not yet your turn.", room=player.socket)
         return
     response = table.round(data.get("action"), int(data.get("value", 0)))
     sio.emit("message", response, room=player.socket)
-    sio.emit("table_state", table.export_state(user), json=True, room=room_id)
+    print(table.export_state(user))
+    sio.emit("table_state", table.export_state(user), json=True, room=player.socket)
 
     if table.check_phase_finish():
         sio.emit("message", "SYSTEM: Next round starting.")
@@ -89,6 +90,7 @@ def action(data):
     table = tables[room_id]
     user = session_user()
     player = table.get_player(user)
+    print(player, player.socket)
     sio.emit("table_state", table.export_state(user), json=True, room=player.socket)
 
 

@@ -69,10 +69,15 @@ class PokerTable:
         for player in self.player_list:
             player.finish()
 
+    def get_player(self, user: UserModel):
+        for player in self.player_list:
+            if player.user.id == user.id:
+                return player
+        return None
+
     def phase_start(self):
         if self.phase == Phases.PRE_FLOP:
-            self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
-
+            print("got here")
             small_blind = self.get_small_blind()
             big_blind = self.get_big_blind()
         elif self.phase == Phases.FLOP:
@@ -89,17 +94,22 @@ class PokerTable:
 
     def fold(self, player: Player):
         self.fold_list.append(player)
+        print(self.fold_list, self.player_list)
+        if len(self.fold_list) == len(self.player_list) - 1:
+            print("Only one player remains")
 
     def round(self, action: str, value: int = 0):
         message = None
         player = self.get_current_player()
-
-        if action == "small_blind" and self.first and self.get_small_blind() == player:
+        print(action, self.first)
+        if self.first and self.get_small_blind() == player:
+            print("Got to small blind")
+            # TODO Fix this
             self.first = False
             chips = player.pay(value)
             if chips is not None:
                 self.add_pot(chips)
-                self.current_call_value = value * 2
+                self.current_call_value = 2
                 message = "Started round successfully."
             else:
                 raise ValueError("Programmer error: please check the player balances before starting the next round.")
@@ -205,12 +215,9 @@ class PokerTable:
         self.phase_start()
 
     def export_state(self, user: UserModel):
-        hand = []
-        for player in self.player_list:
-            if player.user.id == user.id:
-                hand = player.hand
-                break
-        hand = [card.to_json() for card in hand]
+        player = self.get_player(user)
+        hand = player.hand if player is not None else []
+
         return {
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
@@ -220,5 +227,5 @@ class PokerTable:
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
-            "hand": hand
+            "hand": [card.to_json() for card in hand]
         }

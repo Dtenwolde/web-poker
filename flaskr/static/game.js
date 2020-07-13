@@ -34,7 +34,6 @@ function render() {
 
     // Draw background
     context.drawImage(images["board"], 0, 0, canvas.width, canvas.height);
-
     let img = images["ace_of_spades"];
     for (let i = 0; i < 5; i++) {
         placeCommunityCard(i, img);
@@ -109,12 +108,16 @@ function initialize() {
      */
 
     socket.on("hand", (data) => {
+        console.log(data);
         pokerTable.setHand(data);
     });
     socket.on("table_state", (data) => {
+        console.log(data);
         pokerTable.setState(data);
     });
-    socket.on("message", (data) => console.log(data));
+    socket.on("message", (data) => {
+        console.log(data);
+    });
 
     socket.emit("table_state", {
         room: ROOM_ID
@@ -140,5 +143,8 @@ function fold(action, value) {
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
-
 initialize();
+socket.emit("join", {
+        "room": ROOM_ID,
+});
+
