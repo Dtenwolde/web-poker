@@ -27,11 +27,11 @@ def main():
     while poker_table.phase != Phases.POST_ROUND:
         print(poker_table.export_state(duncan))
 
-        print(poker_table.get_current_player().user.username)
+        print(poker_table.get_current_player().user.username, end=" ")
         poker_table.round("call")
-        print(poker_table.get_current_player().user.username)
+        print(poker_table.get_current_player().user.username, end=" ")
         poker_table.round("raise", 500)
-        print(poker_table.get_current_player().user.username)
+        print(poker_table.get_current_player().user.username, end=" ")
         poker_table.round("call")
 
     print(poker_table.export_state(duncan))

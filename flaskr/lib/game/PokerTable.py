@@ -19,6 +19,35 @@ class Phases(Enum):
     RIVER = 4
     POST_ROUND = 5
 
+class HandRanking:
+    ROYAL_FLUSH = 10
+    STRAIGHT_FLUSH = 9
+    FOUR_KIND = 8
+    FULL_HOUSE = 7
+    FLUSH = 6
+    STRAIGHT = 5
+    THREE_KIND = 4
+    TWO_PAIR = 3
+    PAIR = 2
+    HIGH_CARD = 1
+
+    def royal_flush(self, cards):
+        suit = None
+        for card in cards:
+            if suit is None:
+                suit = card.suit
+            if not (card.rank.value > 10 and card.suit == suit):
+                return False
+        return True
+
+    def straight_flush(self, cards):
+        suit = None
+        for card in cards:
+            pass
+
+
+
+
 
 class PokerTable:
     """
@@ -68,6 +97,10 @@ class PokerTable:
 
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
+        
+        round_winner = None
+        for player in self.caller_list: 
+            self.evaluate_hand(player.hand + self.community_cards)
 
         for player in self.player_list:
             player.finish()
@@ -236,3 +269,10 @@ class PokerTable:
             "caller_list": [player.user.username for player in self.caller_list],
             "hand": [card.to_json() for card in hand]
         }
+
+    def evaluate_hand(self, all_cards: List[Card]):
+        if HandRanking.royal_flush(all_cards):
+            return HandRanking.ROYAL_FLUSH
+        if self.straight_flush(all_cards):
+            return HandRanking.STRAIGHT_FLUSH
+
