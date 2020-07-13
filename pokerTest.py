@@ -25,8 +25,6 @@ def main():
     print(f"Big blind: {poker_table.get_big_blind().user.username}")
 
     while poker_table.phase != Phases.POST_ROUND:
-        print(poker_table.export_state(duncan))
-
         print(poker_table.get_current_player().user.username)
         poker_table.round("call")
         print(poker_table.get_current_player().user.username)
@@ -34,7 +32,6 @@ def main():
         print(poker_table.get_current_player().user.username)
         poker_table.round("call")
 
-    print(poker_table.export_state(duncan))
 
 if __name__ == "__main__":
     main()

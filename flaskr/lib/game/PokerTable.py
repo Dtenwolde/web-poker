@@ -221,8 +221,7 @@ class PokerTable:
         # Start new phase
         self.phase_start()
 
-    def export_state(self, user: UserModel):
-        player = self.get_player(user)
+    def export_state(self, player: Player):
         hand = player.hand if player is not None else []
 
         return {

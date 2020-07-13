@@ -2,10 +2,10 @@ from enum import Enum
 
 
 class CardRanks(Enum):
-    ACE = 0
-    KING = 1
-    QUEEN = 2
-    JACK = 3
+    ACE = 14
+    KING = 13
+    QUEEN = 12
+    JACK = 11
     TEN = 10
     NINE = 9
     EIGHT = 8
@@ -45,7 +45,11 @@ class Card:
     __str__ = __repr__
 
     def to_json(self):
+        # TODO: Rename the files to remove this hack
+        rank = self.rank.name.lower()
+        if self.rank.value < 11:
+            rank = self.rank.value
         return {
-            "rank": self.rank.name.capitalize(),
-            "suit": self.suit.name.capitalize()
+            "rank": rank,
+            "suit": self.suit.name.lower()
         }

@@ -17,7 +17,10 @@ function getRelativeMousePosition(canvas, evt) {
 
 function PokerTable() {
     this.hand = [];
-    this.state = {};
+    this.state = {
+        community_cards: [],
+        hand: []
+    };
 
     this.setHand = function(data) {
         this.hand = data;
@@ -34,19 +37,24 @@ function render() {
 
     // Draw background
     context.drawImage(images["board"], 0, 0, canvas.width, canvas.height);
-    let img = images["ace_of_spades"];
-    for (let i = 0; i < 5; i++) {
+
+    if (pokerTable.state === null) return;
+
+    for (let i = 0; i < pokerTable.state.community_cards.length; i++) {
+        let img_name = `${pokerTable.state.community_cards[i].rank}_of_${pokerTable.state.community_cards[i].suit}`;
+        let img = images[img_name];
+
         placeCommunityCard(i, img);
     }
 
     let handCardWidth = 120;
     let handCardHeight = 180;
-    for (let i = 0; i < pokerTable.hand.length; i++) {
+    for (let i = 0; i < pokerTable.state.hand.length; i++) {
         let x = 400 + i * 100;
         let y = 450;
         context.fillStyle = "beige";
         context.fillRect(x, y, handCardWidth, handCardHeight);
-        let image_name = `${pokerTable.hand[i].rank}_of_${pokerTable.hand[i].suit}`;
+        let image_name = `${pokerTable.state.hand[i].rank}_of_${pokerTable.state.hand[i].suit}`;
         context.drawImage(images[image_name], x, y, handCardWidth, handCardHeight);
     }
 }
