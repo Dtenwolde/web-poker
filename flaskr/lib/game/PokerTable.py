@@ -230,6 +230,7 @@ class PokerTable:
             "pot": self.pot,
             "phase": self.phase.name.capitalize(),
             "active_player_index": self.active_player_index,
+            "active_player": self.get_current_player().user.username,
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],

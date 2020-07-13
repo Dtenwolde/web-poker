@@ -16,7 +16,6 @@ function joinRoom(userId, room) {
         "room": room,
         "id": userId,
     });
-
 }
 
 function askPassword(password, room_id) {

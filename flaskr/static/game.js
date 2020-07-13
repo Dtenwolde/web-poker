@@ -19,17 +19,27 @@ function PokerTable() {
     this.hand = [];
     this.state = {
         community_cards: [],
-        hand: []
+        hand: [],
+        active_player: ""
     };
+
+    this.fadeMessages = [{
+        message: "Connected.",
+        ticks: 60
+    }];
 
     this.setHand = function(data) {
         this.hand = data;
     };
 
     this.setState = function(data) {
-        this.state = data;
+        this.state = {
+            ...data
+        };
     };
 }
+
+
 
 // Game rendering stuff
 function render() {
@@ -38,8 +48,6 @@ function render() {
     // Draw background
     context.drawImage(images["board"], 0, 0, canvas.width, canvas.height);
 
-    if (pokerTable.state === null) return;
-
     for (let i = 0; i < pokerTable.state.community_cards.length; i++) {
         let img_name = `${pokerTable.state.community_cards[i].rank}_of_${pokerTable.state.community_cards[i].suit}`;
         let img = images[img_name];
@@ -47,16 +55,34 @@ function render() {
         placeCommunityCard(i, img);
     }
 
-    let handCardWidth = 120;
-    let handCardHeight = 180;
+    let handCardWidth = 100;
+    let handCardHeight = 150;
     for (let i = 0; i < pokerTable.state.hand.length; i++) {
-        let x = 400 + i * 100;
+        let x = 400 + i * 110;
         let y = 450;
         context.fillStyle = "beige";
         context.fillRect(x, y, handCardWidth, handCardHeight);
         let image_name = `${pokerTable.state.hand[i].rank}_of_${pokerTable.state.hand[i].suit}`;
         context.drawImage(images[image_name], x, y, handCardWidth, handCardHeight);
     }
+
+    context.fillStyle = "black";
+    context.font = "20px Arial";
+    context.fillText(`Current turn: ${pokerTable.state.active_player}`, 10, 20);
+
+    if (pokerTable.fadeMessages.length > 0) {
+        let len = context.measureText(pokerTable.fadeMessages[0].message);
+        context.font = "30px Arial";
+        let percent = Math.min(1, pokerTable.fadeMessages[0].ticks / 30);
+        context.fillStyle = `rgba(0, 0, 0, ${percent})`;
+        context.fillText(pokerTable.fadeMessages[0].message, 480 - len.width / 2, 180);
+        pokerTable.fadeMessages[0].ticks--;
+
+        if (pokerTable.fadeMessages[0].ticks === 0) {
+            pokerTable.fadeMessages = pokerTable.fadeMessages.slice(1);
+        }
+    }
+
 }
 
 function placeCommunityCard(index, card) {
@@ -120,16 +146,18 @@ function initialize() {
         pokerTable.setHand(data);
     });
     socket.on("table_state", (data) => {
-        console.log(data);
         pokerTable.setState(data);
     });
     socket.on("message", (data) => {
-        console.log(data);
+        pokerTable.fadeMessages.push({
+            message: data,
+            ticks: 60
+        })
     });
 
 
     socket.emit("table_state", {
-        room: ROOM_ID
+        "room": ROOM_ID
     });
 }
 
@@ -152,8 +180,9 @@ function fold(action, value) {
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
-initialize();
 socket.emit("join", {
         "room": ROOM_ID,
 });
+initialize();
+
 
