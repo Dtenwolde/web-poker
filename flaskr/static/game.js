@@ -26,6 +26,21 @@ function PokerTable() {
     this.fadeMessages = [{
         message: "Connected.",
         ticks: 60
+    }, {
+        message: "It is not your turn yet.",
+        ticks: 120
+    }, {
+        message: "Duncan raised with 400.",
+        ticks: 180
+    }, {
+        message: "Daniel called 400.",
+        ticks: 240
+    }, {
+        message: "Fabienne folded.",
+        ticks: 300
+    }, {
+        message: "Duncan called.",
+        ticks: 300
     }];
 
     this.setHand = function(data) {
@@ -37,8 +52,36 @@ function PokerTable() {
             ...data
         };
     };
-}
 
+    this.MESSAGE_HEIGHT = 40;
+    this.drawFadeMessages = function() {
+        let origHeight = 100;
+        if (this.fadeMessages.length > 0) {
+            if (this.fadeMessages[0].ticks < 0) {
+                this.fadeMessages = this.fadeMessages.slice(1);
+            } else {
+                origHeight -= (1 - Math.min(1, this.fadeMessages[0].ticks / 30)) * this.MESSAGE_HEIGHT * 1.5;
+            }
+        }
+        let n_visible = Math.min(5, this.fadeMessages.length);
+        for (let i = 0; i < n_visible; i++) {
+            let fm = this.fadeMessages[i];
+            let percent = Math.min(1, fm.ticks / 30);
+
+            context.font = `${this.MESSAGE_HEIGHT}px Arial`;
+            context.strokeStyle = `rgba(0, 0, 0, ${percent})`;
+            context.lineWidth = 0.5;
+            context.fillStyle = `rgba(165, 70, 50, ${percent})`;
+
+            let len = context.measureText(fm.message);
+            context.fillText(fm.message, 480 - len.width / 2, origHeight + i * this.MESSAGE_HEIGHT * 1.5);
+            context.strokeText(fm.message, 480 - len.width / 2, origHeight + i * this.MESSAGE_HEIGHT * 1.5);
+            context.stroke();
+
+            fm.ticks--;
+        }
+    }
+}
 
 
 // Game rendering stuff
@@ -70,18 +113,7 @@ function render() {
     context.font = "20px Arial";
     context.fillText(`Current turn: ${pokerTable.state.active_player}`, 10, 20);
 
-    if (pokerTable.fadeMessages.length > 0) {
-        let len = context.measureText(pokerTable.fadeMessages[0].message);
-        context.font = "30px Arial";
-        let percent = Math.min(1, pokerTable.fadeMessages[0].ticks / 30);
-        context.fillStyle = `rgba(0, 0, 0, ${percent})`;
-        context.fillText(pokerTable.fadeMessages[0].message, 480 - len.width / 2, 180);
-        pokerTable.fadeMessages[0].ticks--;
-
-        if (pokerTable.fadeMessages[0].ticks === 0) {
-            pokerTable.fadeMessages = pokerTable.fadeMessages.slice(1);
-        }
-    }
+    pokerTable.drawFadeMessages();
 
 }
 
@@ -181,7 +213,7 @@ function fold(action, value) {
 }
 
 socket.emit("join", {
-        "room": ROOM_ID,
+    "room": ROOM_ID,
 });
 initialize();
 
