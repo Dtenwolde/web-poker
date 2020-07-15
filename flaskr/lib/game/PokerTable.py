@@ -11,6 +11,8 @@ from flaskr.lib.models.models import UserModel
 SMALL_BLIND_CALL_VALUE = 200
 
 
+
+
 class Phases(Enum):
     NOT_YET_STARTED = 0
     PRE_FLOP = 1
@@ -30,24 +32,6 @@ class HandRanking:
     TWO_PAIR = 3
     PAIR = 2
     HIGH_CARD = 1
-
-    def royal_flush(self, cards):
-        suit = None
-        for card in cards:
-            if suit is None:
-                suit = card.suit
-            if not (card.rank.value > 10 and card.suit == suit):
-                return False
-        return True
-
-    def straight_flush(self, cards):
-        suit = None
-        for card in cards:
-            pass
-
-
-
-
 
 class PokerTable:
     """

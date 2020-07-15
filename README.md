@@ -14,7 +14,7 @@ For linux
     
 For windows
    
-    call ./venv/Scripts/activate.bat
+    call .\venv\Scripts\activate.bat
     
 Install all required packages to run the server 
 
