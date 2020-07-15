@@ -2,18 +2,28 @@ html {
     font-family: sans-serif;
     background: #eee;
     padding: 1rem;
+
+    height: 100vh;
+    width: 100%;
+
+    box-sizing: border-box;
 }
 
 body {
     margin: 0 auto;
     background: white;
+
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .content-wrapper {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+    height: 95%;
 }
 
 .content-wrapper > * {
@@ -39,6 +49,9 @@ nav {
     display: flex;
     align-items: center;
     padding: 0 0.5rem;
+    height: 5%;
+    box-sizing: border-box;
+
 }
 
 nav h1 {
@@ -65,6 +78,10 @@ nav ul li a, nav ul li span, header .action {
 
 .content {
     padding: 0 1rem 1rem;
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100%;
 }
 
 .content > header {
@@ -76,6 +93,7 @@ nav ul li a, nav ul li span, header .action {
 .content > header h1 {
     flex: auto;
     margin: 1rem 0 0.25rem 0;
+    box-sizing: border-box;
 }
 
 .flash {
@@ -83,6 +101,8 @@ nav ul li a, nav ul li span, header .action {
     padding: 1em;
     background: #cae6f6;
     border: 1px solid #377ba8;
+    box-sizing: border-box;
+
 }
 
 .post > header {
@@ -117,15 +137,21 @@ nav ul li a, nav ul li span, header .action {
     margin: 1em 0;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+
 }
 
 .content label {
     font-weight: bold;
     margin-bottom: 0.5em;
+    box-sizing: border-box;
+
 }
 
 .content input, .content textarea {
     margin-bottom: 1em;
+    box-sizing: border-box;
+
 }
 
 .content textarea {
@@ -142,6 +168,35 @@ input[type=submit] {
     min-width: 10em;
 }
 
+#chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 #messages {
-    list-style-type: none
+    list-style-type: none;
+    overflow-y: auto;
+}
+
+#game-wrapper {
+    display: none;
+}
+
+.main-content {
+    flex: 7;
+}
+
+.secondary-content {
+    flex: 3;
+}
+
+.main-wrapper {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }

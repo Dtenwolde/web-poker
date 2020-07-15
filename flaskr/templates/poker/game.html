@@ -1,21 +1,50 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-    <canvas id="canvas">
-    </canvas>
+    <div class="main-wrapper">
+        <div id="lobby-wrapper" class="main-content">
+            <article class="post">
+                <header>
+                    <div>
+                        <h1>{{ room.name }}</h1>
+                        <h1>Share this code: {{ room.temp_password }}</h1>
+                        <div class="about">Room leader: {{ room.author.username }}</div>
+
+                    </div>
+                    {% if session_user().id == room['author_id'] %}
+                        <a class="action" href="{{ url_for('poker.room_settings', room_id=room.id) }}">Edit Settings</a>
+                        <a class="action" href="javascript:void(0);" onclick="startRoom()">Start Game</a>
+                        <!--    TODO: SETTINGS-->
+                    {% endif %}
+                </header>
+            </article>
+        </div>
+        <div id="game-wrapper" class="main-content">
+            <canvas id="canvas">
+            </canvas>
 
 
-    <button onclick="call('call', 0)">Call</button>
-    <button onclick="raise('raise', 100)">Raise</button>
-    <button onclick="fold('fold', 0)">Fold</button>
+            <button onclick="call('call', 0)">Call</button>
+            <button onclick="raise('raise', 100)">Raise</button>
+            <button onclick="fold('fold', 0)">Fold</button>
+        </div>
+        <div id="chat-wrapper" class="secondary-content">
+            <ul id="messages"></ul>
+            <form id="messageform" method="post">
+                <input id="m" autocomplete="off"/>
+                <input id="roomid" type="hidden" value="{{ room.id }}"/>
+                <input id="username" type="hidden" value="{{ session_user().username }}"/>
+                <button>Send</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
 
 {% block script %}
     <script>
-        const ROOM_ID = '{{ room.id }}';
-
+        const ROOM_ID = "{{ room.id }}";
+        const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
     </script>
     <script src="{{ url_for("static", filename="game.js") }}"></script>
 {% endblock %}

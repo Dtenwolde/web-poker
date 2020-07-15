@@ -1,3 +1,48 @@
+
+let socket = io();
+
+socket.on("join", (data) => {
+    console.log("New user detected: " + data);
+});
+
+/*
+ * Userlist and chat related socket io handlers.
+ */
+socket.on("user_list", (data) => {
+    $(".about").empty();
+    data.forEach(player => {
+        $(".about").append('<p>' + player.username + ' - ' + player.balance + '</p>');
+    })
+});
+
+$('#messageform').submit(function(e) {
+    e.preventDefault(); // prevents page reloading
+    console.log("prevented default");
+    let m = $('#m');
+    data = {
+        "message": m.val(),
+        "room": $('#roomid').val(),
+        "username": $('#username').val()
+    };
+    socket.emit('chat message', data);
+    m.val('');
+    return false;
+});
+
+socket.on("chat message", (data) => {
+    $('#messages').append($('<li>').text(data.username + ": " + data.message));
+});
+
+function loadMainContent(gameWrapper) {
+    let divs = document.getElementsByClassName("main-content");
+    Array.from(divs).forEach((div) => {
+        div.style.display = "none";
+    });
+
+    document.getElementById(gameWrapper).style.display = "block";
+}
+
+
 let canvas = document.getElementById("canvas");
 canvas.width = 1000;
 canvas.height = 600;
@@ -23,25 +68,16 @@ function PokerTable() {
         active_player: ""
     };
 
-    this.fadeMessages = [{
-        message: "Connected.",
-        ticks: 60
-    }, {
-        message: "It is not your turn yet.",
-        ticks: 120
-    }, {
-        message: "Duncan raised with 400.",
-        ticks: 180
-    }, {
-        message: "Daniel called 400.",
-        ticks: 240
-    }, {
-        message: "Fabienne folded.",
-        ticks: 300
-    }, {
-        message: "Duncan called.",
-        ticks: 300
-    }];
+    this.COMMUNITY_CARD_FLIP_MAXTICKS = 30;
+    this.community_card_flip_ticks = [
+        this.COMMUNITY_CARD_FLIP_MAXTICKS,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS * 1.5,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS * 3,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS
+    ];
+
+    this.fadeMessages = [];
 
     this.setHand = function(data) {
         this.hand = data;
@@ -49,7 +85,17 @@ function PokerTable() {
 
     this.setState = function(data) {
         this.state = {
-            ...data
+            ...data,
+            community_cards: [{
+                rank: "ace",
+                suit: "spades"
+            },{
+                rank: "queen",
+                suit: "hearts"
+            },{
+                rank: "king",
+                suit: "clubs"
+            }]
         };
     };
 
@@ -92,10 +138,7 @@ function render() {
     context.drawImage(images["board"], 0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < pokerTable.state.community_cards.length; i++) {
-        let img_name = `${pokerTable.state.community_cards[i].rank}_of_${pokerTable.state.community_cards[i].suit}`;
-        let img = images[img_name];
-
-        placeCommunityCard(i, img);
+        placeCommunityCard(i);
     }
 
     let handCardWidth = 100;
@@ -117,15 +160,37 @@ function render() {
 
 }
 
-function placeCommunityCard(index, card) {
+function placeCommunityCard(index) {
+    let img_name = `${pokerTable.state.community_cards[index].rank}_of_${pokerTable.state.community_cards[index].suit}`;
+    let card = images[img_name];
+
     let x = 283.5 + 85.5 * index;
     let y = 258;
     let tableCardWidth = 60;
     let tableCardHeight = 90;
 
     context.fillStyle = "beige";
-    context.fillRect(x, y, tableCardWidth, tableCardHeight);
-    context.drawImage(card, x, y, tableCardWidth, tableCardHeight);
+    if (pokerTable.community_card_flip_ticks[index] > 0) {
+        let half = pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS / 2;
+        let ticks = pokerTable.community_card_flip_ticks[index]--;
+        // First half of turning animation (back side up)
+
+        let animation_percent = Math.sin(Math.min((ticks - half), pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS - half) / half * Math.PI / 2);
+        let width = tableCardWidth * animation_percent;
+        let yOffset = -(1 - Math.abs(animation_percent)) * 7;
+
+        let xOffset = (tableCardWidth - width) / 2 - (-(1 - Math.abs(animation_percent)) * 7);
+        if (ticks > half) {
+            context.drawImage(images["cardback"], x + xOffset, y + yOffset, width, tableCardHeight);
+        } else {
+            context.fillRect(x + xOffset, y + yOffset, width, tableCardHeight);
+            context.drawImage(card, x + xOffset, y + yOffset, width, tableCardHeight);
+        }
+    } else {
+        // Flat card on the table
+        context.fillRect(x, y, tableCardWidth, tableCardHeight);
+        context.drawImage(card, x, y, tableCardWidth, tableCardHeight);
+    }
 }
 
 canvas.addEventListener("click", (e) => console.log(getRelativeMousePosition(canvas, e)));
@@ -198,23 +263,33 @@ function postInit() {
 }
 
 function call(action, value) {
-    console.log("call")
+    console.log("call");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
 function raise(action, value) {
-    console.log("raise")
+    console.log("raise");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
 function fold(action, value) {
-    console.log("fold")
+    console.log("fold");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
+}
+
+
+socket.on("start", (data) => {
+    console.log("Got here");
+    loadMainContent("game-wrapper");
+    initialize();
+});
+
+function startRoom() {
+    socket.emit("start", {
+        room: ROOM_ID
+    });
 }
 
 socket.emit("join", {
     "room": ROOM_ID,
 });
-initialize();
-
-
