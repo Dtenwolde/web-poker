@@ -30,7 +30,7 @@ class HandRanking:
     STRAIGHT = 5
     THREE_KIND = 4
     TWO_PAIR = 3
-    PAIR = 2
+    ONE_PAIR = 2
     HIGH_CARD = 1
 
 class PokerTable:
