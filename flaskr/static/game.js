@@ -1,3 +1,53 @@
+let socket = io();
+
+socket.on("join", (data) => {
+    console.log("New user detected: " + data);
+});
+
+/*
+ * Userlist and chat related socket io handlers.
+ */
+socket.on("user_list", (data) => {
+    let userList = $(".user-list");
+    userList.empty();
+    data.forEach(player => {
+        userList.append(`
+            <div class="user-entry">
+            <div class="user-entry-name">${player.username}</div>
+            <div class="user-entry-balance">€${player.balance}</div>
+            </div>
+        `);
+    })
+});
+
+$('#messageform').submit(function(e) {
+    e.preventDefault(); // prevents page reloading
+    console.log("prevented default");
+    let m = $('#m');
+    data = {
+        "message": m.val(),
+        "room": $('#roomid').val(),
+        "username": $('#username').val()
+    };
+    socket.emit('chat message', data);
+    m.val('');
+    return false;
+});
+
+socket.on("chat message", (data) => {
+    $('#messages').append($('<li>').text(data.username + ": " + data.message));
+});
+
+function loadMainContent(gameWrapper) {
+    let divs = document.getElementsByClassName("main-content");
+    Array.from(divs).forEach((div) => {
+        div.style.display = "none";
+    });
+
+    document.getElementById(gameWrapper).style.display = "flex";
+}
+
+
 let canvas = document.getElementById("canvas");
 canvas.width = 1000;
 canvas.height = 600;
@@ -23,10 +73,16 @@ function PokerTable() {
         active_player: ""
     };
 
-    this.fadeMessages = [{
-        message: "Connected.",
-        ticks: 60
-    }];
+    this.COMMUNITY_CARD_FLIP_MAXTICKS = 30;
+    this.community_card_flip_ticks = [
+        this.COMMUNITY_CARD_FLIP_MAXTICKS,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS * 1.5,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS * 3,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS,
+        this.COMMUNITY_CARD_FLIP_MAXTICKS
+    ];
+
+    this.fadeMessages = [];
 
     this.setHand = function(data) {
         this.hand = data;
@@ -34,11 +90,49 @@ function PokerTable() {
 
     this.setState = function(data) {
         this.state = {
-            ...data
+            ...data,
+            community_cards: [{
+                rank: "ace",
+                suit: "spades"
+            }, {
+                rank: "queen",
+                suit: "hearts"
+            }, {
+                rank: "king",
+                suit: "clubs"
+            }]
         };
     };
-}
 
+    this.MESSAGE_HEIGHT = 40;
+    this.drawFadeMessages = function() {
+        let origHeight = 100;
+        if (this.fadeMessages.length > 0) {
+            if (this.fadeMessages[0].ticks < 0) {
+                this.fadeMessages = this.fadeMessages.slice(1);
+            } else {
+                origHeight -= (1 - Math.min(1, this.fadeMessages[0].ticks / 30)) * this.MESSAGE_HEIGHT * 1.5;
+            }
+        }
+        let n_visible = Math.min(5, this.fadeMessages.length);
+        for (let i = 0; i < n_visible; i++) {
+            let fm = this.fadeMessages[i];
+            let percent = Math.min(1, fm.ticks / 30);
+
+            context.font = `${this.MESSAGE_HEIGHT}px Arial`;
+            context.strokeStyle = `rgba(0, 0, 0, ${percent})`;
+            context.lineWidth = 0.5;
+            context.fillStyle = `rgba(165, 70, 50, ${percent})`;
+
+            let len = context.measureText(fm.message);
+            context.fillText(fm.message, 480 - len.width / 2, origHeight + i * this.MESSAGE_HEIGHT * 1.5);
+            context.strokeText(fm.message, 480 - len.width / 2, origHeight + i * this.MESSAGE_HEIGHT * 1.5);
+            context.stroke();
+
+            fm.ticks--;
+        }
+    }
+}
 
 
 // Game rendering stuff
@@ -49,10 +143,7 @@ function render() {
     context.drawImage(images["board"], 0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < pokerTable.state.community_cards.length; i++) {
-        let img_name = `${pokerTable.state.community_cards[i].rank}_of_${pokerTable.state.community_cards[i].suit}`;
-        let img = images[img_name];
-
-        placeCommunityCard(i, img);
+        placeCommunityCard(i);
     }
 
     let handCardWidth = 100;
@@ -70,30 +161,41 @@ function render() {
     context.font = "20px Arial";
     context.fillText(`Current turn: ${pokerTable.state.active_player}`, 10, 20);
 
-    if (pokerTable.fadeMessages.length > 0) {
-        let len = context.measureText(pokerTable.fadeMessages[0].message);
-        context.font = "30px Arial";
-        let percent = Math.min(1, pokerTable.fadeMessages[0].ticks / 30);
-        context.fillStyle = `rgba(0, 0, 0, ${percent})`;
-        context.fillText(pokerTable.fadeMessages[0].message, 480 - len.width / 2, 180);
-        pokerTable.fadeMessages[0].ticks--;
-
-        if (pokerTable.fadeMessages[0].ticks === 0) {
-            pokerTable.fadeMessages = pokerTable.fadeMessages.slice(1);
-        }
-    }
+    pokerTable.drawFadeMessages();
 
 }
 
-function placeCommunityCard(index, card) {
+function placeCommunityCard(index) {
+    let img_name = `${pokerTable.state.community_cards[index].rank}_of_${pokerTable.state.community_cards[index].suit}`;
+    let card = images[img_name];
+
     let x = 283.5 + 85.5 * index;
     let y = 258;
     let tableCardWidth = 60;
     let tableCardHeight = 90;
 
     context.fillStyle = "beige";
-    context.fillRect(x, y, tableCardWidth, tableCardHeight);
-    context.drawImage(card, x, y, tableCardWidth, tableCardHeight);
+    if (pokerTable.community_card_flip_ticks[index] > 0) {
+        let half = pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS / 2;
+        let ticks = pokerTable.community_card_flip_ticks[index]--;
+        // First half of turning animation (back side up)
+
+        let animation_percent = Math.sin(Math.min((ticks - half), pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS - half) / half * Math.PI / 2);
+        let width = tableCardWidth * animation_percent;
+        let yOffset = -(1 - Math.abs(animation_percent)) * 7;
+
+        let xOffset = (tableCardWidth - width) / 2 - (-(1 - Math.abs(animation_percent)) * 7);
+        if (ticks > half) {
+            context.drawImage(images["cardback"], x + xOffset, y + yOffset, width, tableCardHeight);
+        } else {
+            context.fillRect(x + xOffset, y + yOffset, width, tableCardHeight);
+            context.drawImage(card, x + xOffset, y + yOffset, width, tableCardHeight);
+        }
+    } else {
+        // Flat card on the table
+        context.fillRect(x, y, tableCardWidth, tableCardHeight);
+        context.drawImage(card, x, y, tableCardWidth, tableCardHeight);
+    }
 }
 
 canvas.addEventListener("click", (e) => console.log(getRelativeMousePosition(canvas, e)));
@@ -166,23 +268,33 @@ function postInit() {
 }
 
 function call(action, value) {
-    console.log("call")
+    console.log("call");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
 function raise(action, value) {
-    console.log("raise")
+    console.log("raise");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
 function fold(action, value) {
-    console.log("fold")
+    console.log("fold");
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
 
-socket.emit("join", {
-        "room": ROOM_ID,
+
+socket.on("start", (data) => {
+    console.log("Got here");
+    loadMainContent("game-wrapper");
+    initialize();
 });
-initialize();
 
+function startRoom() {
+    socket.emit("start", {
+        room: ROOM_ID
+    });
+}
 
+socket.emit("join", {
+    "room": ROOM_ID,
+});

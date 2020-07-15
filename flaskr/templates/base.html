@@ -1,30 +1,31 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - Flaskr</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 <body>
-    <nav>
-      <h1>Poker</h1>
-      <ul>
+<nav>
+    <h1>Poker</h1>
+    <ul>
         {% if session_user() is not none %}
-          <li><span>{{ session_user().username }}</span>
-          <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
-        {% else %}
-          <li><a href="{{ url_for('auth.register') }}">Register</a>
-          <li><a href="{{ url_for('auth.login') }}">Log In</a>
+            <li><span>{{ session_user().username }}</span>
+            <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
+                {% else %}
+            <li><a href="{{ url_for('auth.register') }}">Register</a>
+            <li><a href="{{ url_for('auth.login') }}">Log In</a>
         {% endif %}
-      </ul>
-    </nav>
-    <div class="content-wrapper">
-        <section class="content">
-          <header>
+    </ul>
+</nav>
+<div class="content-wrapper">
+    <section class="content">
+        <header>
             {% block header %}{% endblock %}
-          </header>
-          {% for message in get_flashed_messages() %}
+        </header>
+        {% for message in get_flashed_messages() %}
             <div class="flash">{{ message }}</div>
-          {% endfor %}
-          {% block content %}{% endblock %}
-        </section>
-    </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </section>
+</div>
 </body>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>

@@ -1,21 +1,55 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-    <canvas id="canvas">
-    </canvas>
+    <div class="main-wrapper">
+        <div id="lobby-wrapper" class="main-content">
+            <article class="post">
+                <header>
+                    <div>
+                        <h1>Room: <u>{{ room.name }}</u></h1>
+                        <h1>Share this code: <u>{{ room.temp_password }}</u></h1>
+                        <div class="about">Room leader: {{ room.author.username }}</div>
+                        <div>
+                            <h3>
+                            User list</h3>
+                            <div class="user-list"></div>
+                        </div>
+                    </div>
+                    {% if session_user().id == room['author_id'] %}
+                        <div class="custom-input" onclick="changeSettings()">Edit Settings</div>
+                        <div class="custom-input" onclick="startRoom()">Start Game</div>
+                        <!--    TODO: SETTINGS-->
+                    {% endif %}
+                </header>
+            </article>
+        </div>
+        <div id="game-wrapper" class="main-content">
+            <canvas id="canvas">
+            </canvas>
 
-
-    <button onclick="call('call', 0)">Call</button>
-    <button onclick="raise('raise', 100)">Raise</button>
-    <button onclick="fold('fold', 0)">Fold</button>
+            <div id="button-bar">
+                <button class="custom-input" onclick="call('call', 0)">Call</button>
+                <button class="custom-input" onclick="raise('raise', 100)">Raise</button>
+                <button class="custom-input" onclick="fold('fold', 0)">Fold</button>
+            </div>
+        </div>
+        <div id="chat-wrapper" class="secondary-content">
+            <ul id="messages"></ul>
+            <form id="messageform" method="post">
+                <input class="custom-input" id="m" autocomplete="off"/>
+                <input id="roomid" type="hidden" value="{{ room.id }}"/>
+                <input id="username" type="hidden" value="{{ session_user().username }}"/>
+                <button class="custom-input">Send</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
 
 {% block script %}
     <script>
-        const ROOM_ID = '{{ room.id }}';
-
+        const ROOM_ID = "{{ room.id }}";
+        const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
     </script>
     <script src="{{ url_for("static", filename="game.js") }}"></script>
 {% endblock %}

@@ -1,33 +1,47 @@
 html {
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
     background: #eee;
     padding: 1rem;
+
+    height: 100vh;
+    width: 100%;
+
+    box-sizing: border-box;
 }
+
+/*label, input, button {*/
+/*    !* the following ensures they're all using the same box-model for rendering *!*/
+/*    -moz-box-sizing: content-box; !* or `border-box` *!*/
+/*    -webkit-box-sizing: content-box;*/
+/*    box-sizing: content-box;*/
+/*}*/
 
 body {
     margin: 0 auto;
     background: white;
+
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .content-wrapper {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+    height: 95%;
 }
 
 .content-wrapper > * {
 }
 
 h1 {
-    font-family: serif;
     color: #377ba8;
     margin: 1rem 0;
 }
 
-a {
-    color: #377ba8;
-}
 
 hr {
     border: none;
@@ -39,6 +53,9 @@ nav {
     display: flex;
     align-items: center;
     padding: 0 0.5rem;
+    height: 5%;
+    box-sizing: border-box;
+
 }
 
 nav h1 {
@@ -46,7 +63,7 @@ nav h1 {
     margin: 0;
 }
 
-nav h1 a {
+nav h1 {
     text-decoration: none;
     padding: 0.25rem 0.5rem;
 }
@@ -58,13 +75,17 @@ nav ul {
     padding: 0;
 }
 
-nav ul li a, nav ul li span, header .action {
+nav ul li, nav ul li span, header .action {
     display: block;
     padding: 0.5rem;
 }
 
 .content {
     padding: 0 1rem 1rem;
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100%;
 }
 
 .content > header {
@@ -76,6 +97,7 @@ nav ul li a, nav ul li span, header .action {
 .content > header h1 {
     flex: auto;
     margin: 1rem 0 0.25rem 0;
+    box-sizing: border-box;
 }
 
 .flash {
@@ -83,6 +105,8 @@ nav ul li a, nav ul li span, header .action {
     padding: 1em;
     background: #cae6f6;
     border: 1px solid #377ba8;
+    box-sizing: border-box;
+
 }
 
 .post > header {
@@ -117,15 +141,21 @@ nav ul li a, nav ul li span, header .action {
     margin: 1em 0;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+
 }
 
 .content label {
     font-weight: bold;
     margin-bottom: 0.5em;
+    box-sizing: border-box;
+
 }
 
 .content input, .content textarea {
     margin-bottom: 1em;
+    box-sizing: border-box;
+
 }
 
 .content textarea {
@@ -142,6 +172,103 @@ input[type=submit] {
     min-width: 10em;
 }
 
+#chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 #messages {
-    list-style-type: none
+    list-style-type: none;
+    overflow-y: auto;
+}
+
+#game-wrapper {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+
+.main-content {
+    flex: 7;
+}
+
+.secondary-content {
+    flex: 3;
+}
+
+.main-wrapper {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+#button-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.custom-input {
+    display: inline-block;
+    padding: 0.35em 1.2em;
+    border: 0.1em solid #222222;
+    margin: 0 0.3em 0.3em 0;
+    border-radius: 0.12em;
+    box-sizing: border-box;
+
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: #222222;
+    text-align:center;
+    transition: all 0.2s;
+
+    -webkit-appearance: none;
+    height: 32px;
+}
+
+.custom-input:hover {
+    color: #222222;
+    background-color: #888888;
+}
+
+#messageform {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+#messageform > input {
+    flex: 7;
+    margin-right: 4px;
+}
+
+#messageform > button {
+    flex: 3;
+}
+
+.user-entry {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    padding: 4px;
+    border-bottom: 1px solid #222222;
+    margin-bottom: 8px;
+}
+
+.user-entry-name {
+    font-size: 16px;
+    font-weight: 300;
+}
+
+.user-list {
+    width: 30%;
 }
