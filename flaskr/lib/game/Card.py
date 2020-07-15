@@ -16,7 +16,6 @@ class CardRanks(Enum):
     THREE = 3
     TWO = 2
 
-
 class CardSuits(Enum):
     SPADES = 0
     HEARTS = 1
