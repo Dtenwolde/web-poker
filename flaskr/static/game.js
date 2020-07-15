@@ -1,4 +1,3 @@
-
 let socket = io();
 
 socket.on("join", (data) => {
@@ -9,9 +8,15 @@ socket.on("join", (data) => {
  * Userlist and chat related socket io handlers.
  */
 socket.on("user_list", (data) => {
-    $(".about").empty();
+    let userList = $(".user-list");
+    userList.empty();
     data.forEach(player => {
-        $(".about").append('<p>' + player.username + ' - ' + player.balance + '</p>');
+        userList.append(`
+            <div class="user-entry">
+            <div class="user-entry-name">${player.username}</div>
+            <div class="user-entry-balance">€${player.balance}</div>
+            </div>
+        `);
     })
 });
 
@@ -39,7 +44,7 @@ function loadMainContent(gameWrapper) {
         div.style.display = "none";
     });
 
-    document.getElementById(gameWrapper).style.display = "block";
+    document.getElementById(gameWrapper).style.display = "flex";
 }
 
 
@@ -89,10 +94,10 @@ function PokerTable() {
             community_cards: [{
                 rank: "ace",
                 suit: "spades"
-            },{
+            }, {
                 rank: "queen",
                 suit: "hearts"
-            },{
+            }, {
                 rank: "king",
                 suit: "clubs"
             }]
