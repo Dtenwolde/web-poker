@@ -7,7 +7,7 @@ from flask import request
 
 # from flaskr.lib.poker  import Poker, Player
 from flaskr.lib.game.Player import Player
-from flaskr.lib.game.PokerTable import PokerTable
+from flaskr.lib.game.PokerTable import PokerTable, PokerException
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
 
@@ -50,16 +50,24 @@ def message(data):
 @sio.on("start")
 def start(data):
     room_id = int(data.get("room"))
-
     room = room_repository.get_room(room_id)
+    user = session_user()
+
+    table = tables[room_id]
+    player = table.get_player(user)
 
     # Only the owner may start the game
-    if room.author.id != session_user().id:
-        print(room.author.id, session_user().id)
+    if room.author.id != user.id:
+        sio.emit("message", "You are not the room owner.", room=player.socket)
         return
-    # Assume everybody is ready
+
+    # Assume everybody is ready, maybe implement ready check later
     sio.emit("start", "None", room=room_id)
-    tables[room_id].initialize_round()
+
+    try:
+        table.initialize_round()
+    except PokerException as e:
+        sio.emit("message", e.message, room=player.socket)
 
 
 @sio.on("action")
@@ -74,6 +82,7 @@ def action(data):
     if current_player.user.id != user.id:
         sio.emit("message", "It is not yet your turn.", room=player.socket)
         return
+
     response = table.round(data.get("action"), int(data.get("value", 0)))
     sio.emit("message", response, room=player.socket)
 

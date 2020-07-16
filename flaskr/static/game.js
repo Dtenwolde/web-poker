@@ -1,3 +1,9 @@
+let canvas = document.getElementById("canvas");
+canvas.width = 1000;
+canvas.height = 600;
+let context = canvas.getContext("2d");
+context.imageSmoothingEnabled = true;
+
 let socket = io();
 
 socket.on("join", (data) => {
@@ -46,13 +52,6 @@ function loadMainContent(gameWrapper) {
 
     document.getElementById(gameWrapper).style.display = "flex";
 }
-
-
-let canvas = document.getElementById("canvas");
-canvas.width = 1000;
-canvas.height = 600;
-let context = canvas.getContext("2d");
-context.imageSmoothingEnabled = true;
 
 const CARD_WIDTH = 222;
 const CARD_HEIGHT = 323;
@@ -242,13 +241,9 @@ function initialize() {
     /*
      * Register all socket.io functions to the pokerTable object.
      */
-
-    socket.on("hand", (data) => {
-        console.log(data);
-        pokerTable.setHand(data);
-    });
     socket.on("table_state", (data) => {
         pokerTable.setState(data);
+        updateChips();
     });
     socket.on("message", (data) => {
         pokerTable.fadeMessages.push({
@@ -263,25 +258,37 @@ function initialize() {
     });
 }
 
+function updateChips() {
+    let chips = ["black", "blue", "green", "pink", "red", "white"];
+
+    let div = document.getElementById("chip-wrapper");
+    chips.forEach((chip) => {
+        div.innerHTML += `
+            <div class="chip-display">
+                <div class="chip-image-wrapper">
+                    <img class="chip-image" src="/static/images/chips/${chip}_chip.png"/>
+                </div>
+                <div class="chip-bottom">${pokerTable.state.chips[chip]} left.</div>
+            </div>
+        `;
+    });
+
+    rangeSlider.max = pokerTable.state.chip_sum / 100;
+}
+
 function postInit() {
     setInterval(render, 1000 / 60);
 }
 
-function call(action, value) {
-    console.log("call");
+
+
+function raise() { sendAction("raise", rangeSlider.value); }
+function fold() { sendAction("fold", 0); }
+function call() { sendAction("call", 0); }
+
+function sendAction(action, value) {
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
 }
-
-function raise(action, value) {
-    console.log("raise");
-    socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
-}
-
-function fold(action, value) {
-    console.log("fold");
-    socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})
-}
-
 
 socket.on("start", (data) => {
     console.log("Got here");
@@ -298,3 +305,22 @@ function startRoom() {
 socket.emit("join", {
     "room": ROOM_ID,
 });
+
+
+/*
+ * Load slider stuff
+ */
+let rangeSlider = document.getElementById("rs-range-line");
+let rangeBullet = document.getElementById("rs-bullet");
+
+rangeSlider.addEventListener("input", showSliderValue, false);
+
+function showSliderValue() {
+    if (rangeSlider.value === rangeSlider.max) {
+        rangeBullet.innerHTML = "All In"
+    } else {
+        rangeBullet.innerHTML = rangeSlider.value;
+    }
+    let bulletPosition = (rangeSlider.value / rangeSlider.max);
+    rangeBullet.style.left = (bulletPosition * 200) + "px";
+}

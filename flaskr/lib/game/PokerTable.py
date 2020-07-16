@@ -11,6 +11,10 @@ from flaskr.lib.models.models import UserModel
 SMALL_BLIND_CALL_VALUE = 200
 
 
+class PokerException(Exception):
+    def __init__(self, message=""):
+        super().__init__(self.message)
+        self.message = message
 
 
 class Phases(Enum):
@@ -32,6 +36,7 @@ class HandRanking:
     TWO_PAIR = 3
     PAIR = 2
     HIGH_CARD = 1
+
 
 class PokerTable:
     """
@@ -55,6 +60,14 @@ class PokerTable:
         self.active_player_index = 0
 
     def initialize_round(self):
+        """
+        Initializes the Poker game, resets the pot to 0
+
+        :return: An error string, or None if no error occured.
+        """
+        if len(self.player_list) < 2:
+            raise PokerException("Need at least two players to start the game.")
+
         # TODO: add pay
         self.deck = self.deck_generator()
         self.deal_cards()
@@ -251,7 +264,9 @@ class PokerTable:
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
-            "hand": [card.to_json() for card in hand]
+            "hand": [card.to_json() for card in hand],
+            "chips": player.chips,
+            "chip_sum": player.sum_chips()
         }
 
     def evaluate_hand(self, all_cards: List[Card]):

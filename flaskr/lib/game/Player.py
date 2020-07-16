@@ -16,7 +16,7 @@ class Player:
 
         self.hand = []
         self.chips = {
-            "black": 44,
+            "black": 0,
             "green": 44,
             "blue": 44,
             "red": 44,
@@ -41,10 +41,11 @@ class Player:
         """
         to_pay = current_call_value - self.current_call_value
 
+        keys = list(self.chips.keys())
         chips = defaultdict(int)
         chip_idx = 0
         while to_pay > 0:
-            key = list(self.chips.keys())[chip_idx]
+            key = keys[chip_idx]
             value = get_value(key)
             while value <= to_pay and self.chips[key] > 0:
                 to_pay -= value
@@ -53,7 +54,26 @@ class Player:
 
             chip_idx += 1
             if chip_idx == len(self.chips.keys()) and to_pay != 0:
-                return None
+                # If no chip could be broken up to still pay the call value.
+                if not self.check_break_chips():
+                    return None
 
         self.current_call_value = current_call_value
         return chips
+
+    def check_break_chips(self):
+        """
+        Checks if any chips can be broken up into whites using
+        :return: true if it broke up a chip, false otherwise
+        """
+        for key in self.chips.keys():
+            if self.chips[key] > 0:
+                value = get_value(key)
+                n_whites = value // get_value("white")
+                self.chips["white"] += n_whites
+                return True
+        return False
+
+    def sum_chips(self):
+        return sum(get_value(key) * amount for key, amount in self.chips.items())
+

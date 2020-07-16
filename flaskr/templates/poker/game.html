@@ -11,35 +11,42 @@
                         <div class="about">Room leader: {{ room.author.username }}</div>
                         <div>
                             <h3>
-                            User list</h3>
+                                User list</h3>
                             <div class="user-list"></div>
                         </div>
                     </div>
                     {% if session_user().id == room['author_id'] %}
-                        <div class="custom-input" onclick="changeSettings()">Edit Settings</div>
-                        <div class="custom-input" onclick="startRoom()">Start Game</div>
+                        <div class="custom-input custom-button" onclick="changeSettings()">Edit Settings</div>
+                        <div class="custom-input custom-button" onclick="startRoom()">Start Game</div>
                         <!--    TODO: SETTINGS-->
                     {% endif %}
                 </header>
             </article>
         </div>
         <div id="game-wrapper" class="main-content">
-            <canvas id="canvas">
-            </canvas>
-
-            <div id="button-bar">
-                <button class="custom-input" onclick="call('call', 0)">Call</button>
-                <button class="custom-input" onclick="raise('raise', 100)">Raise</button>
-                <button class="custom-input" onclick="fold('fold', 0)">Fold</button>
+            <div id="canvas-wrapper">
+                <canvas id="canvas">
+                </canvas>
             </div>
+            <div id="button-bar">
+                <button class="custom-input custom-button" onclick="call()">Call</button>
+                <button class="custom-input custom-button" onclick="raise()">Raise</button>
+                <div class="range-slider">
+                    <input id="rs-range-line" class="rs-range" type="range" value="0" min="0" max="1">
+                    <span id="rs-bullet" class="rs-label">0</span>
+                </div>
+                <button class="custom-input custom-button" onclick="fold()">Fold</button>
+            </div>
+        </div>
+        <div id="chip-wrapper" class="secondary-content">
         </div>
         <div id="chat-wrapper" class="secondary-content">
             <ul id="messages"></ul>
             <form id="messageform" method="post">
-                <input class="custom-input" id="m" autocomplete="off"/>
+                <input class="custom-input" id="m" autocomplete="off" placeholder="Message"/>
                 <input id="roomid" type="hidden" value="{{ room.id }}"/>
                 <input id="username" type="hidden" value="{{ session_user().username }}"/>
-                <button class="custom-input">Send</button>
+                <button class="custom-input custom-button">Send</button>
             </form>
         </div>
     </div>

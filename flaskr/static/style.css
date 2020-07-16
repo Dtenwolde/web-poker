@@ -10,13 +10,6 @@ html {
     box-sizing: border-box;
 }
 
-/*label, input, button {*/
-/*    !* the following ensures they're all using the same box-model for rendering *!*/
-/*    -moz-box-sizing: content-box; !* or `border-box` *!*/
-/*    -webkit-box-sizing: content-box;*/
-/*    box-sizing: content-box;*/
-/*}*/
-
 body {
     margin: 0 auto;
     background: white;
@@ -153,9 +146,7 @@ nav ul li, nav ul li span, header .action {
 }
 
 .content input, .content textarea {
-    margin-bottom: 1em;
     box-sizing: border-box;
-
 }
 
 .content textarea {
@@ -173,6 +164,11 @@ input[type=submit] {
 }
 
 #chat-wrapper {
+    border-left: 1px solid grey;
+    border-right: 1px solid grey;
+    border-bottom: 1px solid grey;
+
+
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -222,21 +218,23 @@ input[type=submit] {
     border-radius: 0.12em;
     box-sizing: border-box;
 
+    -webkit-appearance: none;
+    height: 32px;
+}
+
+.custom-button {
     text-decoration: none;
     font-family: 'Roboto', sans-serif;
     font-size: 16px;
     font-weight: 300;
     color: #222222;
-    text-align:center;
+    text-align: center;
     transition: all 0.2s;
-
-    -webkit-appearance: none;
-    height: 32px;
 }
 
-.custom-input:hover {
+.custom-button:hover {
     color: #222222;
-    background-color: #888888;
+    background-color: #BBBBBB;
 }
 
 #messageform {
@@ -271,4 +269,119 @@ input[type=submit] {
 
 .user-list {
     width: 30%;
+}
+
+#canvas-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.chip-display {
+    display: flex;
+    flex-direction: column;
+
+    text-align: center;
+    background-color: #EEEEEE;
+    user-select: none;
+}
+
+.chip-image-wrapper {
+    flex: 5;
+}
+
+.chip-image {
+    width: 80px;
+    height: 80px;
+}
+
+.chip-bottom {
+    flex: 1;
+}
+
+
+/* Slider styling
+     Taken from https://codepen.io/mayuMPH/pen/ZjxGEY
+*/
+
+.rs-range {
+    width: 220px;
+    -webkit-appearance: none;
+}
+
+.rs-range:focus {
+    outline: none;
+}
+
+.rs-range::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 1px;
+    cursor: pointer;
+    box-shadow: none;
+    background: #222;
+    border-radius: 0px;
+    border: 0px solid #010101;
+}
+
+.rs-range::-moz-range-track {
+    width: 100%;
+    height: 1px;
+    cursor: pointer;
+    box-shadow: none;
+    background: #222;
+    border-radius: 0px;
+    border: 0px solid #010101;
+}
+
+.rs-range::-webkit-slider-thumb {
+    border: 0 solid #ffffff;
+    height: 22px;
+    width: 22px;
+    border-radius: 22px;
+    background: #444;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.rs-range::-moz-range-thumb {
+    border: 0 solid #ffffff;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.25);
+    height: 22px;
+    width: 22px;
+    border-radius: 22px;
+    background: #444;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.rs-range::-moz-focus-outer {
+    border: 0;
+}
+
+.rs-label {
+    position: relative;
+    transform-origin: center center;
+    display: block;
+    width: 60px;
+    height: 60px;
+
+    background: transparent;
+    border-radius: 50%;
+    text-align: center;
+
+    box-sizing: border-box;
+
+    margin-left: -15px;
+    color: #222;
+    font-style: normal;
+    font-weight: normal;
+    line-height: normal;
+    font-size: 16px;
+}
+
+.rs-label::after {
+    content: "eur";
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.07em;
+    margin-top: -2px;
 }
