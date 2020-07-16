@@ -1,4 +1,3 @@
-from flaskr.lib.database import request_session
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.PokerTable import PokerTable, Phases
 from flaskr.lib.models.models import UserModel
@@ -12,7 +11,7 @@ def create_user(name, uid, balance):
 
 
 def main():
-    poker_table = PokerTable()
+    poker_table = PokerTable("3")
 
     duncan = create_user("Duncan", 1, 1000)
     daniel = create_user("Daniel", 2, 1000)
@@ -38,6 +37,7 @@ def main():
         poker_table.round("call")
 
     print(poker_table.export_state(Player(duncan, "1")))
+
 
 if __name__ == "__main__":
     main()
