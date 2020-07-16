@@ -89,17 +89,7 @@ function PokerTable() {
 
     this.setState = function(data) {
         this.state = {
-            ...data,
-            community_cards: [{
-                rank: "ace",
-                suit: "spades"
-            }, {
-                rank: "queen",
-                suit: "hearts"
-            }, {
-                rank: "king",
-                suit: "clubs"
-            }]
+            ...data
         };
     };
 
@@ -244,11 +234,12 @@ function initialize() {
     socket.on("table_state", (data) => {
         pokerTable.setState(data);
         updateChips();
+        document.getElementById("call-button").innerHTML = "Call with " + pokerTable.state.to_call
     });
     socket.on("message", (data) => {
         pokerTable.fadeMessages.push({
             message: data,
-            ticks: 60
+            ticks: 120
         })
     });
 
@@ -262,7 +253,9 @@ function updateChips() {
     let chips = ["black", "blue", "green", "pink", "red", "white"];
 
     let div = document.getElementById("chip-wrapper");
+    div.innerHTML = "";
     chips.forEach((chip) => {
+        // TODO: Reuse chips you loaded once for next renders.
         div.innerHTML += `
             <div class="chip-display">
                 <div class="chip-image-wrapper">
@@ -282,7 +275,7 @@ function postInit() {
 
 
 
-function raise() { sendAction("raise", rangeSlider.value); }
+function raise() { sendAction("raise", rangeSlider.value * 100); }
 function fold() { sendAction("fold", 0); }
 function call() { sendAction("call", 0); }
 

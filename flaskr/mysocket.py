@@ -1,34 +1,31 @@
 from typing import Dict
 
+from flask import request
 from flask_socketio import join_room, leave_room
 
 from flaskr import sio
-from flask import request
-
 # from flaskr.lib.poker  import Poker, Player
-from flaskr.lib.game.Player import Player
 from flaskr.lib.game.PokerTable import PokerTable, PokerException
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
-
 
 tables: Dict[int, PokerTable] = {}
 
 
 @sio.on('join')
 def on_join(data):
-    room = int(data['room'])
-    join_room(room=room)
+    room_id = int(data['room'])
+    join_room(room=room_id)
 
-    if room not in tables:
-        tables[room] = PokerTable()
+    if room_id not in tables:
+        tables[room_id] = PokerTable(room_id)
 
     # TODO: Make sure a player is only joining a room once
     user = session_user()
-    tables[room].add_player(user, request.sid)
+    tables[room_id].add_player(user, request.sid)
 
-    sio.emit("join", user.username, json=True, room=room)
-    sio.emit("user_list", tables[room].export_players(), json=True, room=room)
+    sio.emit("join", user.username, json=True, room=room_id)
+    sio.emit("user_list", tables[room_id].export_players(), json=True, room=room_id)
 
 
 @sio.on('leave')
@@ -84,7 +81,8 @@ def action(data):
         return
 
     response = table.round(data.get("action"), int(data.get("value", 0)))
-    sio.emit("message", response, room=player.socket)
+    if response is not None:
+        sio.emit("message", response, room=player.socket)
 
     for table_player in table.player_list:
         sio.emit("table_state", table.export_state(table_player), json=True, room=table_player.socket)

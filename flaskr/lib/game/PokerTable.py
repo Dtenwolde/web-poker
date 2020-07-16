@@ -1,5 +1,6 @@
 from enum import Enum
 
+from flaskr import sio
 from flaskr.lib.game import Evaluator
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
@@ -44,7 +45,8 @@ class PokerTable:
     Stores information about the poker game being played
     """
 
-    def __init__(self):
+    def __init__(self, room_id):
+        self.room_id = room_id
         self.player_list: List[Player] = []
 
         self.fold_list: List[Player] = []
@@ -57,8 +59,10 @@ class PokerTable:
 
         self.first = True
         self.pot = {}
-        self.current_call_value = 0
+        self.current_call_value = SMALL_BLIND_CALL_VALUE
         self.active_player_index = 0
+
+        self.all_in = False
 
     def initialize_round(self):
         """
@@ -73,7 +77,6 @@ class PokerTable:
         self.deck = self.deck_generator()
         self.deal_cards()
 
-
         self.phase = Phases.PRE_FLOP
         self.pot = {
             "black": 0,
@@ -83,7 +86,7 @@ class PokerTable:
             "pink": 0,
             "white": 0
         }
-        self.current_call_value = 0
+        self.current_call_value = SMALL_BLIND_CALL_VALUE
 
         self.first = True
 
@@ -93,6 +96,11 @@ class PokerTable:
         self.active_player_index = self.small_blind_index
 
         self.phase_start()
+
+        self.broadcast("New round starting.")
+
+    def broadcast(self, message):
+        sio.emit("message", message, room=self.room_id)
 
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
@@ -125,7 +133,8 @@ class PokerTable:
         return None
 
     def phase_start(self):
-        print("Starting phase", self.phase.name)
+        self.broadcast("Starting phase " + self.phase.name.capitalize().replace("_", " "))
+
         if self.phase == Phases.PRE_FLOP:
             self.first = True
         elif self.phase == Phases.FLOP:
@@ -137,15 +146,10 @@ class PokerTable:
             self.community_cards.append(self.take_card())
         elif self.phase == Phases.RIVER:
             self.community_cards.append(self.take_card())
-            print(f"{self.caller_list=}")
+            # print(f"{self.caller_list=}")
         elif self.phase == Phases.POST_ROUND:
-            print(f"{self.caller_list=}")
+            # print(f"{self.caller_list=}")
             self.post_round()
-
-    def fold(self, player: Player):
-        self.fold_list.append(player)
-        if len(self.fold_list) == len(self.player_list) - 1:
-            print("Only one player remains")
 
     def round(self, action: str, value: int = 0):
         message = None
@@ -155,44 +159,43 @@ class PokerTable:
                 raise ValueError("The small blind was not the first player to do an action.")
 
             self.first = False
-            chips = player.pay(SMALL_BLIND_CALL_VALUE)  # Current small blind
+            chips = player.pay(self.current_call_value)  # Current small blind
             if chips is not None:
+                self.broadcast("%s started the round with %d." % (player.user.username, self.current_call_value))
                 self.add_pot(chips)
                 self.current_call_value = SMALL_BLIND_CALL_VALUE * 2  # In cents
-                message = "Started round successfully."
             else:
                 raise ValueError("Programmer error: please check the player balances before starting the next round.")
 
         elif action == "call":
+            orig_value = player.current_call_value
+
             chips = player.pay(self.current_call_value)
-            print(chips)
             if chips is not None:
-                self.add_pot(chips)
-                self.caller_list.append(player)
-                message = "Successfully called %d." % self.current_call_value
+                self.action_call(chips, player, self.current_call_value - orig_value)
             else:
-                self.fold(player)
+                self.action_fold(player)
                 message = "Folded, not enough currency to match the call value."
 
         elif action == "raise":
+            if self.all_in:
+                return "Cannot raise when all-in already happened."
+
             if value < 100:
                 return "Minimum raise is 1 euro."
+
             chips = player.pay(value)
             if chips is not None:
-                self.add_pot(chips)
-                self.current_call_value += value
-                self.caller_list = [player]
-                message = "Raised by %d." % value
+                self.action_raise(chips, player, value)
             else:
                 return "Cannot raise by %d." % value
 
         elif action == "fold":
-            self.fold(player)
+            self.action_fold(player)
             message = "Folded."
 
         self.increment_player()
 
-        print(message)
         self.check_phase_finish()
         return message
 
@@ -264,7 +267,7 @@ class PokerTable:
 
         self.phase = Phases(self.phase.value + 1)
 
-        # self.caller_list = []
+        self.caller_list = []
 
         # Start new phase
         self.phase_start()
@@ -284,7 +287,8 @@ class PokerTable:
             "caller_list": [player.user.username for player in self.caller_list],
             "hand": [card.to_json() for card in hand],
             "chips": player.chips,
-            "chip_sum": player.sum_chips()
+            "chip_sum": player.sum_chips(),
+            "to_call": self.current_call_value - player.current_call_value
         }
 
     def evaluate_hand(self, hand: List[Card]):
@@ -311,3 +315,25 @@ class PokerTable:
     def handle_tie_breaker(self, tie_players):
         pass
 
+    def action_raise(self, chips, player, value):
+        if player.sum_chips() == 0:
+            self.all_in = True
+
+        self.add_pot(chips)
+        self.current_call_value += value
+        self.caller_list = [player]
+        self.broadcast("%s raised by %d." % (player.user.username, value))
+
+    def action_fold(self, player: Player):
+        self.fold_list.append(player)
+        if len(self.fold_list) == len(self.player_list) - 1:
+            last_player_set = set(self.player_list).difference(set(self.fold_list))
+            winner = last_player_set.pop()
+            winner.payout(self.pot)
+
+            self.initialize_round()
+
+    def action_call(self, chips, player, value):
+        self.add_pot(chips)
+        self.caller_list.append(player)
+        self.broadcast("%s called %d." % (player.user.username, value))
