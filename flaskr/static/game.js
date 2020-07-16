@@ -41,7 +41,9 @@ $('#messageform').submit(function(e) {
 });
 
 socket.on("chat message", (data) => {
-    $('#messages').append($('<li>').text(data.username + ": " + data.message));
+    let messages = $('#messages');
+    messages.append($('<li class="chat-message-entry">').text(data.username + ": " + data.message));
+    document.getElementById("messages").lastChild.scrollIntoView();
 });
 
 function loadMainContent(gameWrapper) {
@@ -240,30 +242,43 @@ function initialize() {
         pokerTable.fadeMessages.push({
             message: data,
             ticks: 120
-        })
+        });
+
+        let log = document.getElementById("event-log");
+        log.innerHTML += `
+            <div class="event-log-entry">
+                <div class="event-log-date">${new Date().toLocaleTimeString()}</div>
+                <div class="event-log-value">${data}</div>
+            </div>`;
+
+        log.lastChild.scrollIntoView();
     });
 
 
     socket.emit("table_state", {
         "room": ROOM_ID
     });
-}
 
-function updateChips() {
+    // Load all chips
     let chips = ["black", "blue", "green", "pink", "red", "white"];
-
     let div = document.getElementById("chip-wrapper");
-    div.innerHTML = "";
     chips.forEach((chip) => {
-        // TODO: Reuse chips you loaded once for next renders.
         div.innerHTML += `
             <div class="chip-display">
                 <div class="chip-image-wrapper">
                     <img class="chip-image" src="/static/images/chips/${chip}_chip.png"/>
                 </div>
-                <div class="chip-bottom">${pokerTable.state.chips[chip]} left.</div>
+                <div class="chip-bottom" id="chip-value-${chip}">0 left.</div>
             </div>
         `;
+    });
+}
+
+function updateChips() {
+    let chips = ["black", "blue", "green", "pink", "red", "white"];
+
+    chips.forEach((chip) => {
+        document.getElementById(`chip-value-${chip}`).innerHTML = `${pokerTable.state.chips[chip]} left.`
     });
 
     rangeSlider.max = pokerTable.state.chip_sum / 100;
@@ -274,10 +289,17 @@ function postInit() {
 }
 
 
+function raise() {
+    sendAction("raise", rangeSlider.value * 100);
+}
 
-function raise() { sendAction("raise", rangeSlider.value * 100); }
-function fold() { sendAction("fold", 0); }
-function call() { sendAction("call", 0); }
+function fold() {
+    sendAction("fold", 0);
+}
+
+function call() {
+    sendAction("call", 0);
+}
 
 function sendAction(action, value) {
     socket.emit("action", {"room": ROOM_ID, "action": action, "value": value})

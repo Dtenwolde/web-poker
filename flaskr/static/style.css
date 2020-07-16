@@ -32,7 +32,6 @@ body {
 
 h1 {
     color: #377ba8;
-    margin: 1rem 0;
 }
 
 
@@ -70,11 +69,9 @@ nav ul {
 
 nav ul li, nav ul li span, header .action {
     display: block;
-    padding: 0.5rem;
 }
 
 .content {
-    padding: 0 1rem 1rem;
     box-sizing: border-box;
 
     width: 100%;
@@ -131,11 +128,9 @@ nav ul li, nav ul li span, header .action {
 }
 
 .content form {
-    margin: 1em 0;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-
 }
 
 .content label {
@@ -164,10 +159,14 @@ input[type=submit] {
 }
 
 #chat-wrapper {
-    border-left: 1px solid grey;
-    border-right: 1px solid grey;
-    border-bottom: 1px solid grey;
+    flex: 15;
 
+    border-left: 1px solid grey;
+
+    padding-left: 8px;
+
+    max-height: 50%;
+    text-align: center;
 
     display: flex;
     flex-direction: column;
@@ -177,6 +176,13 @@ input[type=submit] {
 #messages {
     list-style-type: none;
     overflow-y: auto;
+    height: 100%;
+    margin: 0;
+    padding: 0 0 8px;
+    text-align: left;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 
 #game-wrapper {
@@ -185,13 +191,13 @@ input[type=submit] {
     justify-content: space-around;
 }
 
-
 .main-content {
     flex: 7;
+    padding-left: 8px;
 }
 
 .secondary-content {
-    flex: 3;
+    flex: 2;
 }
 
 .main-wrapper {
@@ -279,6 +285,7 @@ input[type=submit] {
 .chip-display {
     display: flex;
     flex-direction: column;
+    max-width: 80px;
 
     text-align: center;
     background-color: #EEEEEE;
@@ -384,4 +391,63 @@ input[type=submit] {
     font-size: 12px;
     letter-spacing: 0.07em;
     margin-top: -2px;
+}
+
+#right-column {
+    display: flex;
+    flex-direction: column;
+}
+
+#event-log-wrapper {
+    flex: 15;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: scroll;
+    max-height: 100%;
+
+    padding: 8px;
+
+    border-left: 1px solid grey;
+    border-bottom: 1px solid grey;
+    text-align: center;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.event-log-entry:nth-child(even) {
+    background: #eee
+}
+
+.chat-message-entry:nth-child(even) {
+    background: #eee
+}
+
+.custom-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #444
+}
+
+.event-log-entry {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.event-log-date {
+    flex: 1;
+    font-size: 12px;
+}
+
+.event-log-value {
+    flex: 2;
+    font-size: 16px;
+}
+
+.flex-title {
+    flex: 1;
+    text-align: center;
 }

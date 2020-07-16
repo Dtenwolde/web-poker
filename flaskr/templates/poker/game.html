@@ -40,14 +40,22 @@
         </div>
         <div id="chip-wrapper" class="secondary-content">
         </div>
-        <div id="chat-wrapper" class="secondary-content">
-            <ul id="messages"></ul>
-            <form id="messageform" method="post">
-                <input class="custom-input" id="m" autocomplete="off" placeholder="Message"/>
-                <input id="roomid" type="hidden" value="{{ room.id }}"/>
-                <input id="username" type="hidden" value="{{ session_user().username }}"/>
-                <button class="custom-input custom-button">Send</button>
-            </form>
+        <div id="right-column" class="secondary-content">
+            <div class="custom-title flex-title">Event Log</div>
+            <div id="event-log-wrapper">
+                <div id="event-log">
+                </div>
+            </div>
+            <div class="custom-title flex-title">Chat</div>
+            <div id="chat-wrapper">
+                <ul id="messages"></ul>
+                <form id="messageform" method="post">
+                    <input class="custom-input" id="m" autocomplete="off" placeholder="Message"/>
+                    <input id="roomid" type="hidden" value="{{ room.id }}"/>
+                    <input id="username" type="hidden" value="{{ session_user().username }}"/>
+                    <button class="custom-input custom-button">Send</button>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}
