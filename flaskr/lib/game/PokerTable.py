@@ -1,5 +1,6 @@
 from enum import Enum
 
+from flaskr.lib.game import Evaluator
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
@@ -59,6 +60,7 @@ class PokerTable:
         self.deck = self.deck_generator()
         self.deal_cards()
 
+
         self.phase = Phases.PRE_FLOP
         self.pot = {
             "black": 0,
@@ -82,10 +84,24 @@ class PokerTable:
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
         
-        round_winner = None
-        for player in self.caller_list: 
-            self.evaluate_hand(player.hand + self.community_cards)
+        hand_scores = {}
+        for player in self.caller_list:
 
+            hand_scores[player] = self.evaluate_hand(player.hand)
+            print(hand_scores[player])
+        highest_score = None
+        tie_players = {}
+        for player, hand_rank in hand_scores.items():
+            if highest_score is None:
+                highest_score = hand_rank
+                tie_players[player] = hand_rank
+            elif hand_rank > highest_score:
+                highest_score = hand_rank
+                tie_players = {player: hand_rank}
+            elif hand_rank == highest_score:
+                tie_players[player] = hand_rank
+        self.handle_tie_breaker(tie_players)
+        # TODO: Go to tiebreaker depending on rank
         for player in self.player_list:
             player.finish()
 
@@ -108,7 +124,9 @@ class PokerTable:
             self.community_cards.append(self.take_card())
         elif self.phase == Phases.RIVER:
             self.community_cards.append(self.take_card())
+            print(f"{self.caller_list=}")
         elif self.phase == Phases.POST_ROUND:
+            print(f"{self.caller_list=}")
             self.post_round()
 
     def fold(self, player: Player):
@@ -233,7 +251,7 @@ class PokerTable:
 
         self.phase = Phases(self.phase.value + 1)
 
-        self.caller_list = []
+        # self.caller_list = []
 
         # Start new phase
         self.phase_start()
@@ -254,9 +272,27 @@ class PokerTable:
             "hand": [card.to_json() for card in hand]
         }
 
-    def evaluate_hand(self, all_cards: List[Card]):
-        if HandRanking.royal_flush(all_cards):
+    def evaluate_hand(self, hand: List[Card]):
+        print(hand, self.community_cards)
+        if Evaluator.royal_flush(hand, self.community_cards):
             return HandRanking.ROYAL_FLUSH
-        if self.straight_flush(all_cards):
+        if Evaluator.straight_flush(hand, self.community_cards):
             return HandRanking.STRAIGHT_FLUSH
+        if Evaluator.full_house(hand, self.community_cards):
+            return HandRanking.FULL_HOUSE
+        if Evaluator.flush(hand, self.community_cards):
+            return HandRanking.FLUSH
+        if Evaluator.straight(hand, self.community_cards):
+            return HandRanking.STRAIGHT
+        if Evaluator.three_kind(hand, self.community_cards):
+            return HandRanking.THREE_KIND
+        if Evaluator.two_pair(hand, self.community_cards):
+            return HandRanking.TWO_PAIR
+        if Evaluator.one_pair(hand, self.community_cards):
+            return HandRanking.ONE_PAIR
+        if Evaluator.highest_card(hand, self.community_cards):
+            return HandRanking.HIGH_CARD
+
+    def handle_tie_breaker(self, tie_players):
+        pass
 
