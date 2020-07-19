@@ -9,9 +9,9 @@ from typing import Optional, List
 
 from flaskr.lib.models.models import UserModel
 
-
 SMALL_BLIND_CALL_VALUE = 200
 MINIMUM_RAISE = 100
+
 
 class PokerException(Exception):
     def __init__(self, message=""):
@@ -26,6 +26,7 @@ class Phases(Enum):
     TURN = 3
     RIVER = 4
     POST_ROUND = 5
+
 
 class HandRanking:
     ROYAL_FLUSH = 10
@@ -104,7 +105,7 @@ class PokerTable:
 
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
-        
+
         hand_scores = {}
         for player in self.caller_list:
             hand_scores[player] = self.evaluate_hand(player.hand)
@@ -311,7 +312,6 @@ class PokerTable:
             Evaluator.flush,
             Evaluator.straight,
             Evaluator.three_kind,
-            Evaluator.two_pair,
             Evaluator.one_pair,
             Evaluator.highest_card
         ]
@@ -327,22 +327,11 @@ class PokerTable:
                     # Add evaluator rank to card
                     result = list(zip(cards, len(cards) * [highest_evaluator]))
                     best_cards.extend(result)
+                    if evaluators[highest_evaluator] == Evaluator.four_kind:  # In case four of a kind with pair
+                        highest_evaluator = 8
                     break
 
-        print(best_cards)
-
-
-    # class HandRanking:
-    #     ROYAL_FLUSH = 10
-    #     STRAIGHT_FLUSH = 9
-    #     FOUR_KIND = 8
-    #     FULL_HOUSE = 7
-    #     FLUSH = 6
-    #     STRAIGHT = 5
-    #     THREE_KIND = 4
-    #     TWO_PAIR = 3
-    #     ONE_PAIR = 2
-        # HIGH_CARD = 1
+        print(best_cards[0:5])
 
     def handle_tie_breaker(self, tie_players, highest_score):
         print(tie_players[0].hand)
