@@ -21,8 +21,8 @@ def get_suits(cards):
     return suits_count
 
 
-def royal_flush(hand, community_cards):
-    suits_count = get_suits(hand + community_cards)
+def royal_flush(cards):
+    suits_count = get_suits(cards)
     for cards in suits_count.values():
         if len(cards) >= 5:  # Amount of same suit needed for royal flush to be possible
             royal_flush_count = 0
@@ -35,8 +35,8 @@ def royal_flush(hand, community_cards):
     return False
 
 
-def straight_flush(hand, community_cards):
-    suits_count = get_suits(hand + community_cards)
+def straight_flush(cards):
+    suits_count = get_suits(cards)
     for suit in suits_count.values():
         if len(suit) >= 5:
             index = -1  # To get highest possible straight flush go from highest to lowest cards
@@ -55,8 +55,8 @@ def straight_flush(hand, community_cards):
     return False
 
 
-def four_kind(hand, community_cards):
-    rank_dict = get_ranks(hand + community_cards)
+def four_kind(cards):
+    rank_dict = get_ranks(cards)
     for rank, cards in rank_dict.items():
         if len(cards) == 4:
             return True, cards
@@ -82,17 +82,17 @@ def full_house(card, community_cards):
     return False
 
 
-def flush(hand, community_cards):
-    suit_dict = get_suits(hand + community_cards)
+def flush(cards):
+    suit_dict = get_suits(cards)
     for suit, cards in suit_dict.items():
         if len(cards) >= 5:
             return True, cards
     return False
 
 
-def straight(hand, community_cards):
+def straight(cards):
     values = []
-    for card in hand + community_cards:
+    for card in cards:
         values.append(card.rank.value)
     sorted_values = list(set(sorted(values)))  # Only keep unique ranks
     index = -1
@@ -109,8 +109,8 @@ def straight(hand, community_cards):
     return True
 
 
-def three_kind(hand, community_cards):
-    rank_dict = get_ranks(hand + community_cards)
+def three_kind(cards):
+    rank_dict = get_ranks(cards)
     highest_rank = None
     for rank, cards in rank_dict.items():
         if len(cards) == 3:
@@ -123,8 +123,8 @@ def three_kind(hand, community_cards):
     return False
 
 
-def two_pair(hand, community_hands):
-    rank_dict = get_ranks(hand + community_hands)
+def two_pair(cards):
+    rank_dict = get_ranks(cards)
     highest_rank = second_highest_rank = None
     for rank, cards in rank_dict.items():
         if len(cards) == 2:
@@ -147,8 +147,8 @@ def two_pair(hand, community_hands):
         return True
 
 
-def one_pair(hand, community_hands):
-    rank_dict = get_ranks(hand + community_hands)
+def one_pair(cards):
+    rank_dict = get_ranks(cards)
     highest_rank = None
     for rank, cards in rank_dict.items():
         if len(cards) == 2:
@@ -162,8 +162,8 @@ def one_pair(hand, community_hands):
     return True
 
 
-def highest_card(hand, community_hands):
-    rank_dict = get_ranks(hand + community_hands)
+def highest_card(cards):
+    rank_dict = get_ranks(cards)
     highest_rank = None
     for rank, cards in rank_dict.items():
         if highest_rank is None:

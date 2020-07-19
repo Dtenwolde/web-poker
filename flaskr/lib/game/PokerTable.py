@@ -297,24 +297,40 @@ class PokerTable:
         }
 
     def evaluate_hand(self, hand: List[Card]):
-        if Evaluator.royal_flush(hand, self.community_cards):
-            return HandRanking.ROYAL_FLUSH
-        if Evaluator.straight_flush(hand, self.community_cards):
-            return HandRanking.STRAIGHT_FLUSH
-        if Evaluator.full_house(hand, self.community_cards):
-            return HandRanking.FULL_HOUSE
-        if Evaluator.flush(hand, self.community_cards):
-            return HandRanking.FLUSH
-        if Evaluator.straight(hand, self.community_cards):
-            return HandRanking.STRAIGHT
-        if Evaluator.three_kind(hand, self.community_cards):
-            return HandRanking.THREE_KIND
-        if Evaluator.two_pair(hand, self.community_cards):
-            return HandRanking.TWO_PAIR
-        if Evaluator.one_pair(hand, self.community_cards):
-            return HandRanking.ONE_PAIR
-        if Evaluator.highest_card(hand, self.community_cards):
-            return HandRanking.HIGH_CARD
+        # TODO: Four of a kind
+
+        all_cards = hand + self.community_cards
+
+        best_cards = []
+
+        evaluators = [
+            Evaluator.royal_flush,
+            Evaluator.straight_flush,
+            Evaluator.four_kind,
+            Evaluator.full_house,
+            Evaluator.flush,
+            Evaluator.straight,
+            Evaluator.three_kind,
+            Evaluator.two_pair,
+            Evaluator.one_pair,
+            Evaluator.highest_card
+        ]
+
+        highest_evaluator = 0
+        while len(best_cards) < 5:
+            for highest_evaluator in range(highest_evaluator, len(evaluators)):
+                match, cards = evaluators[highest_evaluator](all_cards)
+                if match:
+                    # Remove all matches from all cards list
+                    all_cards = [card for card in all_cards if card not in cards]
+
+                    # Add evaluator rank to card
+                    result = zip(cards, len(cards) * [highest_evaluator])
+                    best_cards.append(result)
+                    break
+
+        print(best_cards)
+
 
     # class HandRanking:
     #     ROYAL_FLUSH = 10
