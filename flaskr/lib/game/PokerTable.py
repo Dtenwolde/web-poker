@@ -107,24 +107,27 @@ class PokerTable:
         
         hand_scores = {}
         for player in self.caller_list:
-
             hand_scores[player] = self.evaluate_hand(player.hand)
-            print(hand_scores[player])
-        highest_score = None
-        tie_players = {}
+        winner = highest_score = None
+        tie_players = []
         for player, hand_rank in hand_scores.items():
             if highest_score is None:
+                winner = player
                 highest_score = hand_rank
-                tie_players[player] = hand_rank
+                tie_players = [player]
             elif hand_rank > highest_score:
+                winner = player
                 highest_score = hand_rank
-                tie_players = {player: hand_rank}
+                tie_players = [player]
             elif hand_rank == highest_score:
-                tie_players[player] = hand_rank
-        self.handle_tie_breaker(tie_players)
+                tie_players.append(player)
+        if len(tie_players) > 1:
+            winner = self.handle_tie_breaker(tie_players, highest_score)
+
         # TODO: Go to tiebreaker depending on rank
         for player in self.player_list:
             player.finish()
+        return winner
 
     def get_player(self, user: UserModel):
         for player in self.player_list:
@@ -150,6 +153,7 @@ class PokerTable:
         elif self.phase == Phases.POST_ROUND:
             # print(f"{self.caller_list=}")
             self.post_round()
+            # TODO: Reward winner with pot
 
     def round(self, action: str, value: int = 0):
         message = None
@@ -293,7 +297,6 @@ class PokerTable:
         }
 
     def evaluate_hand(self, hand: List[Card]):
-        print(hand, self.community_cards)
         if Evaluator.royal_flush(hand, self.community_cards):
             return HandRanking.ROYAL_FLUSH
         if Evaluator.straight_flush(hand, self.community_cards):
@@ -313,8 +316,27 @@ class PokerTable:
         if Evaluator.highest_card(hand, self.community_cards):
             return HandRanking.HIGH_CARD
 
-    def handle_tie_breaker(self, tie_players):
-        pass
+    # class HandRanking:
+    #     ROYAL_FLUSH = 10
+    #     STRAIGHT_FLUSH = 9
+    #     FOUR_KIND = 8
+    #     FULL_HOUSE = 7
+    #     FLUSH = 6
+    #     STRAIGHT = 5
+    #     THREE_KIND = 4
+    #     TWO_PAIR = 3
+    #     ONE_PAIR = 2
+        # HIGH_CARD = 1
+
+    def handle_tie_breaker(self, tie_players, highest_score):
+        print(tie_players[0].hand)
+        if highest_score == HandRanking.ROYAL_FLUSH:
+            return "split"
+        if highest_score == HandRanking.STRAIGHT_FLUSH:
+            for player in tie_players:
+                print("\n\n\n\n", player.hand)
+
+        return tie_players[0]
 
     def action_raise(self, chips, player, value):
         if player.sum_chips() == 0:
