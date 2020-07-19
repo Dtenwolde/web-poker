@@ -166,6 +166,5 @@ def one_pair(cards):
 
 def highest_card(cards: List[Card]):
     sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=True)
-
     return True, [sorted_cards[0]]
 

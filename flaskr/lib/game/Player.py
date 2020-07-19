@@ -31,6 +31,7 @@ class Player:
 
     def finish(self):
         self.hand = []
+        self.current_call_value = 0
 
     def pay(self, current_call_value):
         """

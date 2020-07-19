@@ -2,6 +2,7 @@ from enum import Enum
 
 from flaskr import sio
 from flaskr.lib.game import Evaluator
+from flaskr.lib.game.Bank import get_value
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
@@ -9,9 +10,9 @@ from typing import Optional, List
 
 from flaskr.lib.models.models import UserModel
 
-
 SMALL_BLIND_CALL_VALUE = 200
 MINIMUM_RAISE = 100
+
 
 class PokerException(Exception):
     def __init__(self, message=""):
@@ -27,17 +28,17 @@ class Phases(Enum):
     RIVER = 4
     POST_ROUND = 5
 
+
 class HandRanking:
-    ROYAL_FLUSH = 10
-    STRAIGHT_FLUSH = 9
-    FOUR_KIND = 8
-    FULL_HOUSE = 7
-    FLUSH = 6
+    ROYAL_FLUSH = 0
+    STRAIGHT_FLUSH = 1
+    FOUR_KIND = 2
+    FULL_HOUSE = 3
+    FLUSH = 4
     STRAIGHT = 5
-    THREE_KIND = 4
-    TWO_PAIR = 3
-    ONE_PAIR = 2
-    HIGH_CARD = 1
+    THREE_KIND = 6
+    ONE_PAIR = 7
+    HIGH_CARD = 8
 
 
 class PokerTable:
@@ -104,30 +105,35 @@ class PokerTable:
 
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
-        
+
         hand_scores = {}
         for player in self.caller_list:
             hand_scores[player] = self.evaluate_hand(player.hand)
-        winner = highest_score = None
-        tie_players = []
-        for player, hand_rank in hand_scores.items():
-            if highest_score is None:
-                winner = player
-                highest_score = hand_rank
-                tie_players = [player]
-            elif hand_rank > highest_score:
-                winner = player
-                highest_score = hand_rank
-                tie_players = [player]
-            elif hand_rank == highest_score:
-                tie_players.append(player)
-        if len(tie_players) > 1:
-            winner = self.handle_tie_breaker(tie_players, highest_score)
 
-        # TODO: Go to tiebreaker depending on rank
+        winning_players = [self.caller_list[0]]
+        for player in self.caller_list[1:]:
+            equal = True
+            for (card1, tier1), (card2, tier2) in zip(hand_scores[player], hand_scores[winning_players[0]]):
+                if tier1 > tier2:
+                    winning_players = [player]
+                    equal = False
+                    break
+                if tier1 < tier2:
+                    equal = False
+                    break
+
+            if equal:
+                winning_players.append(player)
+
+        shared_pot = self.payout_pot(len(winning_players))
+        for player in winning_players:
+            player.payout(shared_pot)
+
         for player in self.player_list:
             player.finish()
-        return winner
+
+        # Payout the game
+        self.initialize_round()
 
     def get_player(self, user: UserModel):
         for player in self.player_list:
@@ -329,8 +335,7 @@ class PokerTable:
                     best_cards.extend(result)
                     break
 
-        print(best_cards)
-
+        return best_cards
 
     # class HandRanking:
     #     ROYAL_FLUSH = 10
@@ -342,7 +347,7 @@ class PokerTable:
     #     THREE_KIND = 4
     #     TWO_PAIR = 3
     #     ONE_PAIR = 2
-        # HIGH_CARD = 1
+    # HIGH_CARD = 1
 
     def handle_tie_breaker(self, tie_players, highest_score):
         print(tie_players[0].hand)
@@ -366,13 +371,22 @@ class PokerTable:
     def action_fold(self, player: Player):
         self.fold_list.append(player)
         if len(self.fold_list) == len(self.player_list) - 1:
-            last_player_set = set(self.player_list).difference(set(self.fold_list))
-            winner = last_player_set.pop()
-            winner.payout(self.pot)
-
-            self.initialize_round()
+            self.phase = Phases.POST_ROUND
 
     def action_call(self, chips, player, value):
         self.add_pot(chips)
         self.caller_list.append(player)
         self.broadcast("%s called %d." % (player.user.username, value))
+
+    def payout_pot(self, shares=1):
+        pot = {}
+
+        missed_value = 0
+
+        for key in self.pot.keys():
+            pot[key] = self.pot[key] // shares
+            missed_value += (pot[key] * shares - self.pot[key]) * get_value(key)
+
+        pot["white"] += (missed_value // get_value("white")) // shares
+
+        return pot
