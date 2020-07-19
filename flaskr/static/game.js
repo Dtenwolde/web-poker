@@ -71,7 +71,8 @@ function PokerTable() {
     this.state = {
         community_cards: [],
         hand: [],
-        active_player: ""
+        active_player: "",
+        started: false
     };
 
     this.COMMUNITY_CARD_FLIP_MAXTICKS = 30;
@@ -243,15 +244,6 @@ function initialize() {
             message: data,
             ticks: 120
         });
-
-        let log = document.getElementById("event-log");
-        log.innerHTML += `
-            <div class="event-log-entry">
-                <div class="event-log-date">${new Date().toLocaleTimeString()}</div>
-                <div class="event-log-value">${data}</div>
-            </div>`;
-
-        log.lastChild.scrollIntoView();
     });
 
 
@@ -319,6 +311,17 @@ function startRoom() {
 
 socket.emit("join", {
     "room": ROOM_ID,
+});
+
+socket.on("message", (data) => {
+    let log = document.getElementById("event-log");
+    log.innerHTML += `
+            <div class="event-log-entry">
+                <div class="event-log-date">${new Date().toLocaleTimeString()}</div>
+                <div class="event-log-value">${data}</div>
+            </div>`;
+
+    log.lastChild.scrollIntoView();
 });
 
 

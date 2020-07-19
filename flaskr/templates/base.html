@@ -5,15 +5,24 @@
 <body>
 <nav>
     <h1>Poker</h1>
-    <ul>
+    <div class="nav-bar">
         {% if session_user() is not none %}
-            <li><span>{{ session_user().username }}</span>
-            <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
-                {% else %}
-            <li><a href="{{ url_for('auth.register') }}">Register</a>
-            <li><a href="{{ url_for('auth.login') }}">Log In</a>
+            <div class="styled-div-text">
+                <div class="custom-text">User: </div>
+                <div class="custom-title">{{ session_user().username }}</div>
+            </div>
+            <button class="custom-input custom-button" onclick="document.location.href='{{ url_for('auth.logout') }}';">
+                Log Out
+            </button>
+        {% else %}
+            <button class="custom-input custom-button"
+                    onclick="document.location.href='{{ url_for('auth.register') }}';">Register
+            </button>
+            <button class="custom-input custom-button" onclick="document.location.href='{{ url_for('auth.login') }}';">
+                Login
+            </button>
         {% endif %}
-    </ul>
+    </div>
 </nav>
 <div class="content-wrapper">
     <section class="content">

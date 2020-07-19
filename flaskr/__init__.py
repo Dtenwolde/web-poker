@@ -2,11 +2,16 @@ import os
 
 from flask import Flask
 from flask_socketio import SocketIO
+import logging
 
 from flaskr.lib.user_session import session_user
 
 global app
 global sio
+global logger
+
+
+logger = logging.getLogger("game")
 
 
 def create_app(test_config=None):
