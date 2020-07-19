@@ -2,7 +2,6 @@ from enum import Enum
 
 from flaskr import sio
 from flaskr.lib.game import Evaluator
-from flaskr.lib.game.Bank import get_value
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
@@ -10,9 +9,9 @@ from typing import Optional, List
 
 from flaskr.lib.models.models import UserModel
 
+
 SMALL_BLIND_CALL_VALUE = 200
 MINIMUM_RAISE = 100
-
 
 class PokerException(Exception):
     def __init__(self, message=""):
@@ -27,7 +26,6 @@ class Phases(Enum):
     TURN = 3
     RIVER = 4
     POST_ROUND = 5
-
 
 class HandRanking:
     ROYAL_FLUSH = 0
@@ -317,7 +315,6 @@ class PokerTable:
             Evaluator.flush,
             Evaluator.straight,
             Evaluator.three_kind,
-            Evaluator.two_pair,
             Evaluator.one_pair,
             Evaluator.highest_card
         ]
@@ -333,21 +330,11 @@ class PokerTable:
                     # Add evaluator rank to card
                     result = list(zip(cards, len(cards) * [highest_evaluator]))
                     best_cards.extend(result)
+                    if evaluators[highest_evaluator] == Evaluator.four_kind:  # In case four of a kind with pair
+                        highest_evaluator = 8
                     break
 
-        return best_cards
-
-    # class HandRanking:
-    #     ROYAL_FLUSH = 10
-    #     STRAIGHT_FLUSH = 9
-    #     FOUR_KIND = 8
-    #     FULL_HOUSE = 7
-    #     FLUSH = 6
-    #     STRAIGHT = 5
-    #     THREE_KIND = 4
-    #     TWO_PAIR = 3
-    #     ONE_PAIR = 2
-    # HIGH_CARD = 1
+        return best_cards[0:5]
 
     def handle_tie_breaker(self, tie_players, highest_score):
         print(tie_players[0].hand)

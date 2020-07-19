@@ -1,6 +1,6 @@
 from typing import List
 
-from flaskr.lib.game.Card import CardRanks, Card
+from flaskr.lib.game.Card import Card
 
 
 def get_ranks(cards):
@@ -20,36 +20,40 @@ def get_suits(cards):
                    "CLUBS": []}
 
     for card in cards:
-        suits_count[card.suit.name].append(card.rank.value)
+        suits_count[card.suit.name].append(card)
     return suits_count
 
 
 def royal_flush(cards):
     suits_count = get_suits(cards)
     for cards in suits_count.values():
+
         if len(cards) >= 5:  # Amount of same suit needed for royal flush to be possible
             royal_flush_cards = []
             for card in cards:
-                if card >= 10:
+                if card.rank.value >= 10:
                     royal_flush_cards.append(card)
             if len(royal_flush_cards) == 5:
-                return True, royal_flush_cards
+                return True, sorted(royal_flush_cards, key=lambda c: c.rank.value, reverse=True)
     return False, None
 
 
 def straight_flush(cards):
     suits_count = get_suits(cards)
-    for suit in suits_count.values():
-        if len(suit) >= 5:
+    for suit_cards in suits_count.values():
+        if len(suit_cards) >= 5:
             index = -1  # To get highest possible straight flush go from highest to lowest cards
-            in_row = []
-            suit_sorted = sorted(suit)
+            sorted_cards = sorted(suit_cards, key=lambda c: c.rank.value, reverse=False)
+            in_row = [sorted_cards[index]]
             while len(in_row) < 5:
                 try:
-                    if suit_sorted[index] - 1 == suit_sorted[index - 1]:
-                        in_row.append(suit_sorted[index])
+                    if sorted_cards[index].rank.value - 1 == sorted_cards[index - 1].rank.value:
+                        in_row.append(sorted_cards[index - 1])
+                    elif sorted_cards[index].rank.value == sorted_cards[index - 1].rank.value:
+                        index -= 1
+                        continue
                     else:
-                        in_row = []
+                        in_row = [sorted_cards[index - 1]]
                     index -= 1
                 except IndexError:
                     return False, None
@@ -60,51 +64,44 @@ def straight_flush(cards):
 def four_kind(cards):
     rank_dict = get_ranks(cards)
     for rank, cards in rank_dict.items():
-        if len(cards) == 4:
-            return True, cards
+        sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=True)
+        if len(sorted_cards) == 4:
+            return True, sorted_cards[0:4]
     return False, None
 
 
 def full_house(cards):
-    rank_dict = get_ranks(cards)
-    full_house_cards = []
-    for rank, cards in rank_dict.items():
-        if len(cards) == 3:
-            full_house_cards += cards
-            highest_rank = None  # Lowest possible
-            for rank_, cards_ in rank_dict.items():
-                if len(cards_) >= 2 and rank_ != rank:
-                    if highest_rank is None:
-                        highest_rank = rank_
-                    elif rank_.value > highest_rank.value:
-                        highest_rank = rank_
-            if highest_rank is not None:
-                full_house_cards += rank_dict[highest_rank]
-                return True, full_house_cards
+    match, three_kind_cards = three_kind(cards)
+    if not match:
+        return False, None
+    match, one_pair_cards = one_pair([card for card in cards if card not in three_kind_cards])
+    if match:
+        return True, three_kind_cards + one_pair_cards
     return False, None
 
 
 def flush(cards):
     suit_dict = get_suits(cards)
     for suit, cards in suit_dict.items():
-        if len(cards) >= 5:
-            return True, cards
+        sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=True)
+        if len(sorted_cards) >= 5:
+            return True, sorted_cards[0:5]
     return False, None
 
 
 def straight(cards):
-    values = []
-    for card in cards:
-        values.append(card.rank.value)
-    sorted_values = list(set(sorted(values)))  # Only keep unique ranks
+    sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=False)
     index = -1
-    in_row = [sorted_values[index]]
+    in_row = [sorted_cards[index]]
     while len(in_row) < 5:
         try:
-            if sorted_values[index] - 1 == sorted_values[index - 1]:
-                in_row.append(sorted_values[index - 1])
+            if sorted_cards[index].rank.value - 1 == sorted_cards[index - 1].rank.value:
+                in_row.append(sorted_cards[index - 1])
+            elif sorted_cards[index].rank.value == sorted_cards[index - 1].rank.value:
+                index -= 1
+                continue
             else:
-                in_row = [sorted_values[index - 1]]
+                in_row = [sorted_cards[index - 1]]
             index -= 1
         except IndexError:
             return False, None
@@ -113,58 +110,31 @@ def straight(cards):
 
 def three_kind(cards):
     rank_dict = get_ranks(cards)
-    highest_rank = None
+    three_kind_cards = None
     for rank, cards in rank_dict.items():
         if len(cards) == 3:
-            if highest_rank is None:
-                highest_rank = rank
-            elif rank.value > highest_rank.value:
-                highest_rank = rank
-    if highest_rank is not None:
-        return True, highest_rank
-    return False, None
-
-
-def two_pair(cards):
-    rank_dict = get_ranks(cards)
-    highest_rank = second_highest_rank = None
-    for rank, cards in rank_dict.items():
-        if len(cards) == 2:
-            if highest_rank is None:
-                highest_rank = rank
-            elif second_highest_rank is None:
-                if rank.value > highest_rank.value:
-                    second_highest_rank = highest_rank
-                    highest_rank = rank
-                else:
-                    second_highest_rank = rank
-            elif rank.value > highest_rank.value:
-                second_highest_rank = highest_rank
-                highest_rank = rank
-            elif rank.value > second_highest_rank.value:
-                second_highest_rank = rank
-    if second_highest_rank is None:
-        return False, None
-    else:
-        return True, highest_rank, second_highest_rank
+            if three_kind_cards is None:
+                three_kind_cards = cards
+            elif rank.value > three_kind_cards[0].rank.value:
+                three_kind_cards = cards
+    return three_kind_cards is not None, three_kind_cards  # TODO: Refactor this
 
 
 def one_pair(cards):
     rank_dict = get_ranks(cards)
-    highest_rank = None
+    pair = None
     for rank, cards in rank_dict.items():
-        if len(cards) == 2:
-            if highest_rank is None:
-                highest_rank = rank
-            elif rank.value > highest_rank.value:
-                highest_rank = rank
-    if highest_rank is None:
+        if len(cards) >= 2:
+            if pair is None:
+                pair = cards
+            elif rank.value > pair[0].rank.value:
+                pair = cards
+    if pair is None:
         return False, None
 
-    return True, highest_rank
+    return True, pair[0:2]
 
 
 def highest_card(cards: List[Card]):
     sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=True)
     return True, [sorted_cards[0]]
-
