@@ -1,5 +1,6 @@
 from flaskr.lib.game.Card import CardRanks
 
+
 def get_ranks(cards):
     rank_dict = {}
     for card in cards:
@@ -25,14 +26,13 @@ def royal_flush(hand, community_cards):
     suits_count = get_suits(hand + community_cards)
     for cards in suits_count.values():
         if len(cards) >= 5:  # Amount of same suit needed for royal flush to be possible
-            royal_flush_count = 0
+            royal_flush_cards = []
             for card in cards:
                 if card >= 10:
-                    royal_flush_count += 1
-            if royal_flush_count == 5:
-                return True
-
-    return False
+                    royal_flush_cards.append(card)
+            if len(royal_flush_cards) == 5:
+                return True, royal_flush_cards
+    return False, None
 
 
 def straight_flush(hand, community_cards):
@@ -50,9 +50,9 @@ def straight_flush(hand, community_cards):
                         in_row = []
                     index -= 1
                 except IndexError:
-                    return False
+                    return False, None
             return True, in_row
-    return False
+    return False, None
 
 
 def four_kind(hand, community_cards):
@@ -60,7 +60,7 @@ def four_kind(hand, community_cards):
     for rank, cards in rank_dict.items():
         if len(cards) == 4:
             return True, cards
-    return False
+    return False, None
 
 
 def full_house(card, community_cards):
@@ -78,8 +78,8 @@ def full_house(card, community_cards):
                         highest_rank = rank_
             if highest_rank is not None:
                 full_house_cards += rank_dict[highest_rank]
-                return True
-    return False
+                return True, full_house_cards
+    return False, None
 
 
 def flush(hand, community_cards):
@@ -87,7 +87,7 @@ def flush(hand, community_cards):
     for suit, cards in suit_dict.items():
         if len(cards) >= 5:
             return True, cards
-    return False
+    return False, None
 
 
 def straight(hand, community_cards):
@@ -105,8 +105,8 @@ def straight(hand, community_cards):
                 in_row = [sorted_values[index - 1]]
             index -= 1
         except IndexError:
-            return False
-    return True
+            return False, None
+    return True, in_row
 
 
 def three_kind(hand, community_cards):
@@ -119,8 +119,8 @@ def three_kind(hand, community_cards):
             elif rank.value > highest_rank.value:
                 highest_rank = rank
     if highest_rank is not None:
-        return True
-    return False
+        return True, highest_rank
+    return False, None
 
 
 def two_pair(hand, community_hands):
@@ -142,9 +142,9 @@ def two_pair(hand, community_hands):
             elif rank.value > second_highest_rank.value:
                 second_highest_rank = rank
     if second_highest_rank is None:
-        return False
+        return False, None
     else:
-        return True
+        return True, highest_rank, second_highest_rank
 
 
 def one_pair(hand, community_hands):
@@ -157,9 +157,9 @@ def one_pair(hand, community_hands):
             elif rank.value > highest_rank.value:
                 highest_rank = rank
     if highest_rank is None:
-        return False
+        return False, None
 
-    return True
+    return True, highest_rank
 
 
 def highest_card(hand, community_hands):
@@ -171,4 +171,5 @@ def highest_card(hand, community_hands):
         elif rank.value > highest_rank.value:
             highest_rank = rank
 
-    return True
+    return True, highest_rank
+

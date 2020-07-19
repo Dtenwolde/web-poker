@@ -11,7 +11,7 @@ from flaskr.lib.models.models import UserModel
 
 
 SMALL_BLIND_CALL_VALUE = 200
-
+MINIMUM_RAISE = 100
 
 class PokerException(Exception):
     def __init__(self, message=""):
@@ -185,7 +185,7 @@ class PokerTable:
             if self.all_in:
                 return "Cannot raise when all-in already happened."
 
-            if value < 100:
+            if value < MINIMUM_RAISE:
                 return "Minimum raise is 1 euro."
 
             chips = player.pay(value)
