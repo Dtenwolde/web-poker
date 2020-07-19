@@ -14,6 +14,9 @@ hand2 = [Card(CardRanks.ACE, CardSuits.HEARTS), Card(CardRanks.NINE, CardSuits.S
 
 hands = [hand1, hand2]
 
+poker_table.community_cards = community_hands
+print(poker_table.evaluate_hand(hand1))
+exit(1)
 
 def get_highest_card(hands, community_cards):
     sorted_hands = []

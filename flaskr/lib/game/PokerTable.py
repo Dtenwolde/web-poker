@@ -325,8 +325,8 @@ class PokerTable:
                     all_cards = [card for card in all_cards if card not in cards]
 
                     # Add evaluator rank to card
-                    result = zip(cards, len(cards) * [highest_evaluator])
-                    best_cards.append(result)
+                    result = list(zip(cards, len(cards) * [highest_evaluator]))
+                    best_cards.extend(result)
                     break
 
         print(best_cards)

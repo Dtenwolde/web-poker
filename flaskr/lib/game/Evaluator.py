@@ -1,4 +1,6 @@
-from flaskr.lib.game.Card import CardRanks
+from typing import List
+
+from flaskr.lib.game.Card import CardRanks, Card
 
 
 def get_ranks(cards):
@@ -63,8 +65,8 @@ def four_kind(cards):
     return False, None
 
 
-def full_house(card, community_cards):
-    rank_dict = get_ranks(card + community_cards)
+def full_house(cards):
+    rank_dict = get_ranks(cards)
     full_house_cards = []
     for rank, cards in rank_dict.items():
         if len(cards) == 3:
@@ -162,14 +164,8 @@ def one_pair(cards):
     return True, highest_rank
 
 
-def highest_card(cards):
-    rank_dict = get_ranks(cards)
-    highest_rank = None
-    for rank, cards in rank_dict.items():
-        if highest_rank is None:
-            highest_rank = rank
-        elif rank.value > highest_rank.value:
-            highest_rank = rank
+def highest_card(cards: List[Card]):
+    sorted_cards = sorted(cards, key=lambda c: c.rank.value, reverse=True)
 
-    return True, highest_rank
+    return True, [sorted_cards[0]]
 
