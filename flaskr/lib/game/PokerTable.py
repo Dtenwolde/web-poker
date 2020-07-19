@@ -15,7 +15,7 @@ SMALL_BLIND_CALL_VALUE = 200
 
 class PokerException(Exception):
     def __init__(self, message=""):
-        super().__init__(self.message)
+        super().__init__(message)
         self.message = message
 
 
@@ -53,7 +53,7 @@ class PokerTable:
         self.caller_list: List[Player] = []
         self.deck = None
         self.small_blind_index = 0
-        self.phase: Phases = Phases.PRE_FLOP
+        self.phase: Phases = Phases.NOT_YET_STARTED
 
         self.community_cards: List[Card] = []
 
@@ -288,7 +288,8 @@ class PokerTable:
             "hand": [card.to_json() for card in hand],
             "chips": player.chips,
             "chip_sum": player.sum_chips(),
-            "to_call": self.current_call_value - player.current_call_value
+            "to_call": self.current_call_value - player.current_call_value,
+            "started": self.phase != Phases.NOT_YET_STARTED
         }
 
     def evaluate_hand(self, hand: List[Card]):

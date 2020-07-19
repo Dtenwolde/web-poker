@@ -1,9 +1,10 @@
+import functools
 from typing import Dict
 
 from flask import request
 from flask_socketio import join_room, leave_room
 
-from flaskr import sio
+from flaskr import sio, logger
 # from flaskr.lib.poker  import Poker, Player
 from flaskr.lib.game.PokerTable import PokerTable, PokerException
 from flaskr.lib.repository import room_repository
@@ -14,6 +15,8 @@ tables: Dict[int, PokerTable] = {}
 
 @sio.on('join')
 def on_join(data):
+    logger.debug("%s sent a %s request." % (request.sid, "join"))
+
     room_id = int(data['room'])
     join_room(room=room_id)
 
@@ -30,6 +33,8 @@ def on_join(data):
 
 @sio.on('leave')
 def on_leave(data):
+    logger.debug("%s sent a %s request." % (request.sid, "leave"))
+
     username = data['id']
     room = int(data['room'])
     leave_room(room)
@@ -39,6 +44,8 @@ def on_leave(data):
 
 @sio.on("chat message")
 def message(data):
+    logger.debug("%s sent a %s request." % (request.sid, "chat message"))
+
     room = int(data.get('room'))
     if message != "":  # Stop empty messages
         sio.emit('chat message', data, room=room, include_self=True)
@@ -46,6 +53,9 @@ def message(data):
 
 @sio.on("start")
 def start(data):
+    print(request.sid)
+    logger.debug("%s sent a %s request." % (request.sid, "start"))
+
     room_id = int(data.get("room"))
     room = room_repository.get_room(room_id)
     user = session_user()
@@ -58,17 +68,19 @@ def start(data):
         sio.emit("message", "You are not the room owner.", room=player.socket)
         return
 
-    # Assume everybody is ready, maybe implement ready check later
-    sio.emit("start", "None", room=room_id)
-
     try:
         table.initialize_round()
+        # Assume everybody is ready, maybe implement ready check later
+        sio.emit("start", "None", room=room_id)
     except PokerException as e:
+        print(e.message, player.socket)
         sio.emit("message", e.message, room=player.socket)
 
 
 @sio.on("action")
 def action(data):
+    logger.debug("%s sent a %s request." % (request.sid, "action"))
+
     room_id = int(data.get("room"))
 
     table = tables[room_id]
@@ -93,6 +105,8 @@ def action(data):
 
 @sio.on("table_state")
 def action(data):
+    logger.debug("%s sent a %s request." % (request.sid, "table_state"))
+
     room_id = int(data.get("room"))
 
     table = tables[room_id]
