@@ -6,7 +6,7 @@ from flask_socketio import join_room, leave_room
 
 from flaskr import sio, logger
 # from flaskr.lib.poker  import Poker, Player
-from flaskr.lib.game.PokerTable import PokerTable, PokerException
+from flaskr.lib.game.PokerTable import PokerTable, PokerException, Phases
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
 
@@ -53,7 +53,6 @@ def message(data):
 
 @sio.on("start")
 def start(data):
-    print(request.sid)
     logger.debug("%s sent a %s request." % (request.sid, "start"))
 
     room_id = int(data.get("room"))
@@ -77,6 +76,24 @@ def start(data):
         sio.emit("message", e.message, room=player.socket)
 
 
+@sio.on("begin")
+def begin(data):
+    room_id = int(data.get("room"))
+    room = room_repository.get_room(room_id)
+    user = session_user()
+
+    table = tables[room_id]
+    player = table.get_player(user)
+    # Only the owner may start the game
+    if room.author.id != user.id:
+        sio.emit("message", "You are not the room owner.", room=player.socket)
+        return
+
+    table.phase = Phases.PRE_FLOP
+
+    sio.emit("begin", None, room=room_id)
+
+
 @sio.on("action")
 def action(data):
     logger.debug("%s sent a %s request." % (request.sid, "action"))
@@ -93,14 +110,12 @@ def action(data):
         return
 
     response = table.round(data.get("action"), int(data.get("value", 0)))
+
     if response is not None:
         sio.emit("message", response, room=player.socket)
 
     for table_player in table.player_list:
         sio.emit("table_state", table.export_state(table_player), json=True, room=table_player.socket)
-
-    if table.check_phase_finish():
-        sio.emit("message", "SYSTEM: Next round starting.")
 
 
 @sio.on("table_state")

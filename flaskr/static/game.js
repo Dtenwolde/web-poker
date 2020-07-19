@@ -57,6 +57,14 @@ function loadMainContent(gameWrapper) {
 
 const CARD_WIDTH = 222;
 const CARD_HEIGHT = 323;
+let COMMUNITY_CARD_FLIP_MAXTICKS = 30;
+let INITIAL_COMMUNITY_CARD_FLIPTICKS = [
+    COMMUNITY_CARD_FLIP_MAXTICKS,
+    COMMUNITY_CARD_FLIP_MAXTICKS * 1.5,
+    COMMUNITY_CARD_FLIP_MAXTICKS * 2,
+    COMMUNITY_CARD_FLIP_MAXTICKS,
+    COMMUNITY_CARD_FLIP_MAXTICKS
+];
 
 function getRelativeMousePosition(canvas, evt) {
     let rect = canvas.getBoundingClientRect();
@@ -75,14 +83,7 @@ function PokerTable() {
         started: false
     };
 
-    this.COMMUNITY_CARD_FLIP_MAXTICKS = 30;
-    this.community_card_flip_ticks = [
-        this.COMMUNITY_CARD_FLIP_MAXTICKS,
-        this.COMMUNITY_CARD_FLIP_MAXTICKS * 1.5,
-        this.COMMUNITY_CARD_FLIP_MAXTICKS * 3,
-        this.COMMUNITY_CARD_FLIP_MAXTICKS,
-        this.COMMUNITY_CARD_FLIP_MAXTICKS
-    ];
+    this.community_card_flip_ticks = [...INITIAL_COMMUNITY_CARD_FLIPTICKS];
 
     this.fadeMessages = [];
 
@@ -168,11 +169,11 @@ function placeCommunityCard(index) {
 
     context.fillStyle = "beige";
     if (pokerTable.community_card_flip_ticks[index] > 0) {
-        let half = pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS / 2;
+        let half = COMMUNITY_CARD_FLIP_MAXTICKS / 2;
         let ticks = pokerTable.community_card_flip_ticks[index]--;
         // First half of turning animation (back side up)
 
-        let animation_percent = Math.sin(Math.min((ticks - half), pokerTable.COMMUNITY_CARD_FLIP_MAXTICKS - half) / half * Math.PI / 2);
+        let animation_percent = Math.sin(Math.min((ticks - half), COMMUNITY_CARD_FLIP_MAXTICKS - half) / half * Math.PI / 2);
         let width = tableCardWidth * animation_percent;
         let yOffset = -(1 - Math.abs(animation_percent)) * 7;
 
@@ -308,6 +309,19 @@ function startRoom() {
         room: ROOM_ID
     });
 }
+
+function beginRound() {
+    if (!pokerTable.state.started) {
+        socket.emit("begin", {
+            room: ROOM_ID
+        });
+    }
+}
+
+socket.on("begin", (data) => {
+    // Reset flip animation ticks
+    pokerTable.community_card_flip_ticks = [...INITIAL_COMMUNITY_CARD_FLIPTICKS];
+});
 
 socket.emit("join", {
     "room": ROOM_ID,

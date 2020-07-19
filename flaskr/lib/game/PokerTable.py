@@ -3,6 +3,7 @@ from enum import Enum
 from flaskr import sio
 from flaskr.lib.game import Evaluator
 from flaskr.lib.game.Player import Player
+from flaskr.lib.game.chip_utils import get_value
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
 from typing import Optional, List
@@ -72,11 +73,14 @@ class PokerTable:
         if len(self.player_list) < 2:
             raise PokerException("Need at least two players to start the game.")
 
+        for player in self.player_list:
+            player.reset()
+
         # TODO: add pay
         self.deck = self.deck_generator()
         self.deal_cards()
 
-        self.phase = Phases.PRE_FLOP
+        self.phase = Phases.NOT_YET_STARTED
         self.pot = {
             "black": 0,
             "green": 0,
@@ -93,6 +97,7 @@ class PokerTable:
         self.caller_list = []
 
         self.active_player_index = self.small_blind_index
+        self.community_cards: List[Card] = []
 
         self.phase_start()
 
@@ -103,33 +108,55 @@ class PokerTable:
 
     def post_round(self):
         self.small_blind_index = (self.small_blind_index + 1) % len(self.player_list)
+        self.caller_list = [player for player in self.player_list if player not in self.fold_list]
 
-        hand_scores = {}
-        for player in self.caller_list:
-            hand_scores[player] = self.evaluate_hand(player.hand)
+        # The game actually finished after all phases
+        if len(self.fold_list) != len(self.player_list) - 1:
+            hand_scores = {}
+            for player in self.caller_list:
+                hand_scores[player] = self.evaluate_hand(player.hand)
 
-        winning_players = [self.caller_list[0]]
-        for player in self.caller_list[1:]:
-            equal = True
-            for (card1, tier1), (card2, tier2) in zip(hand_scores[player], hand_scores[winning_players[0]]):
-                if tier1 > tier2:
-                    winning_players = [player]
-                    equal = False
-                    break
-                if tier1 < tier2:
-                    equal = False
-                    break
+                sio.emit("message", "%s has %s,%s,%s,%s,%s" % (player.user.username, *hand_scores[player]), room=self.room_id)
 
-            if equal:
-                winning_players.append(player)
+            winning_players = [self.caller_list[0]]
+            for player in self.caller_list[1:]:
+                equal = True
+                for (_, tier1), (_, tier2) in zip(hand_scores[player], hand_scores[winning_players[0]]):
+                    if tier1 < tier2:
+                        winning_players = [player]
+                        equal = False
+                        break
+                    if tier1 > tier2:
+                        equal = False
+                        break
+
+                if equal:
+                    for (card1, _), (card2, _) in zip(hand_scores[player], hand_scores[winning_players[0]]):
+                        if card1.rank.value > card2.rank.value:
+                            winning_players = [player]
+                            equal = False
+                            break
+                        if card1.rank.value < card2.rank.value:
+                            equal = False
+                            break
+                    if equal:
+                        winning_players.append(player)
+
+
+        else:
+            winning_players = [self.caller_list[0]]
 
         shared_pot = self.payout_pot(len(winning_players))
+
+        self.broadcast("%s won." % ",".join([player.user.username for player in winning_players]))
+
         for player in winning_players:
             player.payout(shared_pot)
 
         for player in self.player_list:
-            player.finish()
+            player.reset()
 
+        self.update_players()
         # Payout the game
         self.initialize_round()
 
@@ -153,11 +180,8 @@ class PokerTable:
             self.community_cards.append(self.take_card())
         elif self.phase == Phases.RIVER:
             self.community_cards.append(self.take_card())
-            # print(f"{self.caller_list=}")
         elif self.phase == Phases.POST_ROUND:
-            # print(f"{self.caller_list=}")
             self.post_round()
-            # TODO: Reward winner with pot
 
     def round(self, action: str, value: int = 0):
         message = None
@@ -192,14 +216,16 @@ class PokerTable:
             if value < MINIMUM_RAISE:
                 return "Minimum raise is 1 euro."
 
-            chips = player.pay(value)
+            chips = player.pay(self.current_call_value + value)
             if chips is not None:
                 self.action_raise(chips, player, value)
             else:
                 return "Cannot raise by %d." % value
 
         elif action == "fold":
-            self.action_fold(player)
+            if not self.action_fold(player):
+                return None
+
             message = "Folded."
 
         self.increment_player()
@@ -356,9 +382,18 @@ class PokerTable:
         self.broadcast("%s raised by %d." % (player.user.username, value))
 
     def action_fold(self, player: Player):
+        """
+        Returns False if the fold made the game finish.
+
+        :param player:
+        :return:
+        """
         self.fold_list.append(player)
         if len(self.fold_list) == len(self.player_list) - 1:
             self.phase = Phases.POST_ROUND
+            self.phase_start()
+            return False
+        return True
 
     def action_call(self, chips, player, value):
         self.add_pot(chips)
@@ -377,3 +412,7 @@ class PokerTable:
         pot["white"] += (missed_value // get_value("white")) // shares
 
         return pot
+
+    def update_players(self):
+        for player in self.player_list:
+            sio.emit("table_state", self.export_state(player), json=True, room=player.socket)

@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from flaskr import sio
-from flaskr.lib.game.Bank import get_value
+from flaskr.lib.game.chip_utils import get_value
 from flaskr.lib.models.models import UserModel
 
 
@@ -29,7 +29,7 @@ class Player:
     def deal(self, cards):
         self.hand.append(cards)
 
-    def finish(self):
+    def reset(self):
         self.hand = []
         self.current_call_value = 0
 
