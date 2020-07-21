@@ -181,7 +181,7 @@ function drawPlayerHand(i) {
 
     if (i >= 2 && i <= 4) {
         context.translate(cardWidth, -60);
-        context.rotate(3.141592652);
+        context.rotate(-3.141592652);
     }
 
     context.rotate((i + 1) * -0.785398163);
@@ -204,6 +204,7 @@ function render() {
         drawPlayerHand(i);
     }
 
+
     let handCardWidth = 100;
     let handCardHeight = 150;
     for (let i = 0; i < pokerTable.state.hand.length; i++) {
@@ -218,6 +219,7 @@ function render() {
     context.fillStyle = "black";
     context.font = "20px Arial";
     context.fillText(`Current turn: ${pokerTable.state.active_player}`, 10, 20);
+    context.fillText(`Pot: ${pokerTable.state.pot_sum}`, 378.1000061035156, 172.26666259765625 )
 
     pokerTable.drawFadeMessages();
 

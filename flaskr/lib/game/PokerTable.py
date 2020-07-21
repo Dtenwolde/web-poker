@@ -310,17 +310,11 @@ class PokerTable:
         self.phase_start()
 
     def export_state(self, player: Player):
-        hand = player.hand if player is not None else []
-
-        if self.phase == Phases.NOT_YET_STARTED:
-            visible_hands = [p.export_hand() for p in self.player_list if p != player]
-        else:
-            visible_hands = [None] * (len(self.player_list) - 1)
-
         return {
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
             "pot": self.pot,
+            "pot_sum": sum(get_value(key) * amount for key, amount in self.pot.items()) / 100,
             "phase": self.phase.name.capitalize(),
             "active_player_index": self.active_player_index,
             "active_player": self.get_current_player().user.username,
@@ -331,7 +325,7 @@ class PokerTable:
             "players": self.export_player_game_data(player),
             "chips": player.chips,
             "chip_sum": player.sum_chips(),
-            "to_call": self.current_call_value - player.current_call_value,
+            "to_call": (self.current_call_value - player.current_call_value),
             "started": self.phase != Phases.NOT_YET_STARTED
         }
 
@@ -365,7 +359,7 @@ class PokerTable:
                     # Add evaluator rank to card
                     result = list(zip(cards, len(cards) * [highest_evaluator]))
                     best_cards.extend(result)
-                    if evaluators[highest_evaluator] == Evaluator.four_kind:  # In case four of a kind with pair
+                    if len(best_cards) == 4:  # In case four of a kind with pair
                         highest_evaluator = 8
                     break
 
@@ -388,7 +382,7 @@ class PokerTable:
         self.add_pot(chips)
         self.current_call_value += value
         self.caller_list = [player]
-        self.broadcast("%s raised by %d." % (player.user.username, value))
+        self.broadcast("%s raised by %d." % (player.user.username, value / 100))
 
     def action_fold(self, player: Player):
         """
@@ -407,7 +401,7 @@ class PokerTable:
     def action_call(self, chips, player, value):
         self.add_pot(chips)
         self.caller_list.append(player)
-        self.broadcast("%s called %d." % (player.user.username, value))
+        self.broadcast("%s called %d." % (player.user.username, value / 100))
 
     def payout_pot(self, shares=1):
         pot = {}
@@ -440,8 +434,8 @@ class PokerTable:
             else:
                 state = "Waiting"
 
-            if self.phase == Phases.NOT_YET_STARTED:
-                hand = player.export_hand()
+            if self.phase == Phases.NOT_YET_STARTED and state != "Folded":
+                hand = other.export_hand()
             else:
                 hand = None
 
