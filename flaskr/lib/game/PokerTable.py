@@ -10,9 +10,9 @@ from typing import Optional, List
 
 from flaskr.lib.models.models import UserModel
 
-
 SMALL_BLIND_CALL_VALUE = 200
 MINIMUM_RAISE = 100
+
 
 class PokerException(Exception):
     def __init__(self, message=""):
@@ -27,6 +27,7 @@ class Phases(Enum):
     TURN = 3
     RIVER = 4
     POST_ROUND = 5
+
 
 class HandRanking:
     ROYAL_FLUSH = 0
@@ -80,7 +81,7 @@ class PokerTable:
         self.deck = self.deck_generator()
         self.deal_cards()
 
-        self.phase = Phases.NOT_YET_STARTED
+        self.phase = Phases.PRE_FLOP
         self.pot = {
             "black": 0,
             "green": 0,
@@ -116,8 +117,6 @@ class PokerTable:
             for player in self.caller_list:
                 hand_scores[player] = self.evaluate_hand(player.hand)
 
-                sio.emit("message", "%s has %s,%s,%s,%s,%s" % (player.user.username, *hand_scores[player]), room=self.room_id)
-
             winning_players = [self.caller_list[0]]
             for player in self.caller_list[1:]:
                 equal = True
@@ -150,15 +149,13 @@ class PokerTable:
 
         self.broadcast("%s won." % ",".join([player.user.username for player in winning_players]))
 
+        # Payout the game
         for player in winning_players:
             player.payout(shared_pot)
 
-        for player in self.player_list:
-            player.reset()
+        self.phase = Phases.NOT_YET_STARTED
 
         self.update_players()
-        # Payout the game
-        self.initialize_round()
 
     def get_player(self, user: UserModel):
         for player in self.player_list:
@@ -183,7 +180,13 @@ class PokerTable:
         elif self.phase == Phases.POST_ROUND:
             self.post_round()
 
-    def round(self, action: str, value: int = 0):
+    def round(self, user, action: str, value: int = 0):
+        if self.phase == Phases.NOT_YET_STARTED or self.phase == Phases.POST_ROUND:
+            return "The next round has not yet started."
+
+        if self.get_current_player().user.id != user.id:
+            return "It is not yet your turn."
+
         message = None
         player = self.get_current_player()
         if self.first:
@@ -309,6 +312,11 @@ class PokerTable:
     def export_state(self, player: Player):
         hand = player.hand if player is not None else []
 
+        if self.phase == Phases.NOT_YET_STARTED:
+            visible_hands = [p.export_hand() for p in self.player_list if p != player]
+        else:
+            visible_hands = [None] * (len(self.player_list) - 1)
+
         return {
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
@@ -319,7 +327,8 @@ class PokerTable:
             "community_cards": [card.to_json() for card in self.community_cards],
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
-            "hand": [card.to_json() for card in hand],
+            "hand": player.export_hand(),
+            "hands": visible_hands,
             "chips": player.chips,
             "chip_sum": player.sum_chips(),
             "to_call": self.current_call_value - player.current_call_value,

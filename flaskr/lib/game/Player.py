@@ -55,6 +55,7 @@ class Player:
 
             chip_idx += 1
             if chip_idx == len(self.chips.keys()) and to_pay != 0:
+                print(to_pay, key)
                 # If no chip could be broken up to still pay the call value.
                 if not self.check_break_chips():
                     return None
@@ -83,5 +84,11 @@ class Player:
 
     def payout(self, pot):
         self.chips = {k: pot.get(k, 0) + self.chips.get(k, 0) for k in set(self.chips) | set(pot)}
+
+    def export_hand(self):
+        if len(self.hand) == 0:
+            return None
+        return [card.to_json() for card in self.hand]
+
 
 

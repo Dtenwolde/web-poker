@@ -79,6 +79,7 @@ function PokerTable() {
     this.state = {
         community_cards: [],
         hand: [],
+        hands: [null, null, null, null],
         active_player: "",
         started: false
     };
@@ -87,13 +88,9 @@ function PokerTable() {
 
     this.fadeMessages = [];
 
-    this.setHand = function(data) {
-        this.hand = data;
-    };
-
     this.setState = function(data) {
         this.state = {
-            ...data
+            ...data,
         };
     };
 
@@ -128,6 +125,43 @@ function PokerTable() {
 }
 
 
+function drawPlayerHand(i) {
+    /*
+     * This supports up to 7 other player hands.
+     */
+    let positions = [
+        {x: 158, y: 410},
+        {x: 108, y: 243},
+        {x: 196, y: 122},
+        {x: 586, y: 93.26666259765625},
+        {x: 853, y: 169.26666259765625},
+        {x: 888, y: 347.26666259765625},
+        {x: 765, y: 479.26666259765625}
+    ];
+
+    let hand = pokerTable.state.hands[i];
+    let pos = positions[i];
+
+
+    context.translate(pos.x, pos.y);
+    // 0.785398163 == 45 radians
+    context.rotate((i + 1) * 0.785398163);
+    if (hand === null) {
+        context.drawImage(images["cardback"], 0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+        context.drawImage(images["cardback"], 20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+    } else {
+        context.fillStyle = "beige";
+        context.fillRect(0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+        context.drawImage(images[`${hand[0].rank}_of_${hand[0].suit}`], 0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+        context.fillRect(20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+        context.drawImage(images[`${hand[1].rank}_of_${hand[1].suit}`], 20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+    }
+
+    context.rotate((i + 1) * -0.785398163);
+    context.translate(-pos.x, -pos.y);
+}
+
+
 // Game rendering stuff
 function render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -137,6 +171,10 @@ function render() {
 
     for (let i = 0; i < pokerTable.state.community_cards.length; i++) {
         placeCommunityCard(i);
+    }
+
+    for (let i = 0; i < pokerTable.state.hands.length; i++) {
+        drawPlayerHand(i);
     }
 
     let handCardWidth = 100;

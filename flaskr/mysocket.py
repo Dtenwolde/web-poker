@@ -1,16 +1,20 @@
 import functools
+import logging
 from typing import Dict
 
 from flask import request
 from flask_socketio import join_room, leave_room
 
-from flaskr import sio, logger
+from flaskr import sio
 # from flaskr.lib.poker  import Poker, Player
 from flaskr.lib.game.PokerTable import PokerTable, PokerException, Phases
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
 
 tables: Dict[int, PokerTable] = {}
+
+
+logger = logging.getLogger("socket")
 
 
 @sio.on('join')
@@ -33,7 +37,7 @@ def on_join(data):
 
 @sio.on('leave')
 def on_leave(data):
-    logger.debug("%s sent a %s request." % (request.sid, "leave"))
+    logging.debug("%s sent a %s request." % (request.sid, "leave"))
 
     username = data['id']
     room = int(data['room'])
@@ -89,7 +93,8 @@ def begin(data):
         sio.emit("message", "You are not the room owner.", room=player.socket)
         return
 
-    table.phase = Phases.PRE_FLOP
+    table.initialize_round()
+    table.update_players()
 
     sio.emit("begin", None, room=room_id)
 
@@ -103,13 +108,9 @@ def action(data):
     table = tables[room_id]
     user = session_user()
 
-    current_player = table.get_current_player()
     player = table.get_player(user)
-    if current_player.user.id != user.id:
-        sio.emit("message", "It is not yet your turn.", room=player.socket)
-        return
 
-    response = table.round(data.get("action"), int(data.get("value", 0)))
+    response = table.round(user, data.get("action"), int(data.get("value", 0)))
 
     if response is not None:
         sio.emit("message", response, room=player.socket)

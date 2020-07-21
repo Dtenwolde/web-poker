@@ -8,10 +8,9 @@ from flaskr.lib.user_session import session_user
 
 global app
 global sio
-global logger
 
 
-logger = logging.getLogger("game")
+logging.basicConfig(level=logging.DEBUG)
 
 
 def create_app(test_config=None):
