@@ -7,7 +7,8 @@ from flask_socketio import join_room, leave_room
 
 from flaskr import sio
 # from flaskr.lib.poker  import Poker, Player
-from flaskr.lib.game.PokerTable import PokerTable, PokerException, Phases
+from flaskr.lib.game.PokerTable import PokerTable, Phases
+from flaskr.lib.game.Exceptions import PokerException
 from flaskr.lib.repository import room_repository
 from flaskr.lib.user_session import session_user
 

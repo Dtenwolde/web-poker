@@ -22,6 +22,12 @@ def index():
     return render_template('poker/index.html', rooms=rooms)
 
 
+@app.route('/store')
+@require_login()
+def store():
+    return render_template('poker/store.html')
+
+
 @bp.route('/create', methods=('GET', 'POST'))
 @require_login()
 def create():

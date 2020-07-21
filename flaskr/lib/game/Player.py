@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from flaskr import sio
+from flaskr.lib.game.Exceptions import PokerException
 from flaskr.lib.game.chip_utils import get_value
 from flaskr.lib.models.models import UserModel
 
@@ -15,14 +16,13 @@ class Player:
         self.socket = socket
 
         self.hand = []
-        self.chips = {
-            "black": 0,
-            "green": 44,
-            "blue": 44,
-            "red": 44,
-            "pink": 44,
-            "white": 44
-        }
+        self.chips = user.pop_chips()
+
+        if self.chips is None:
+            raise PokerException("This user does not have any chips (already in another room?)")
+
+        # We need this to roll-back if the table stops without a proper finish.
+        self.original_chips = self.chips.copy()
 
         self.current_call_value = 0
 
@@ -32,6 +32,7 @@ class Player:
     def reset(self):
         self.hand = []
         self.current_call_value = 0
+        self.chips = self.original_chips.copy()
 
     def pay(self, current_call_value):
         """
@@ -42,7 +43,7 @@ class Player:
         """
         to_pay = current_call_value - self.current_call_value
 
-        keys = list(self.chips.keys())
+        keys = ["black", "green", "blue", "red", "pink", "white"]
         chips = defaultdict(int)
         chip_idx = 0
         while to_pay > 0:
@@ -69,7 +70,9 @@ class Player:
         Checks if any chips can be broken up into whites using
         :return: true if it broke up a chip, false otherwise
         """
-        for key in self.chips.keys():
+        keys = ["black", "green", "blue", "red", "pink", "white"]
+
+        for key in keys[:-1]:
             if self.chips[key] > 0:
                 value = get_value(key)
                 n_whites = value // get_value("white")
@@ -90,5 +93,14 @@ class Player:
             return None
         return [card.to_json() for card in self.hand]
 
+    def leave(self):
+        """
+        Call this function if the player leaves the table.
+        This will return the chips back to the user.
+
+        :return:
+        """
+        self.user.set_chips(self.chips)
+        self.chips = None
 
 

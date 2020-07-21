@@ -1,3 +1,4 @@
+geventwebsocket
 atomicwrites==1.4.0
 attrs==19.3.0
 bcrypt==3.1.7

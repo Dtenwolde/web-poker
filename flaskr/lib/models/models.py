@@ -1,3 +1,5 @@
+from ast import literal_eval
+
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, DateTime
 from sqlalchemy.orm import relationship, deferred
 
@@ -21,6 +23,8 @@ class UserModel(OrmModelBase):
 
     balance = Column(Integer(), unique=False, nullable=False, default=1000)
 
+    chips = Column(String(), unique=False, nullable=True)
+
     def __init__(self, username: str, password: str = None):
         self.username = username
         if password is not None:
@@ -41,6 +45,26 @@ class UserModel(OrmModelBase):
             db.commit()
             return True
         return False
+
+    def pop_chips(self):
+        if self.chips is not None:
+            chips = literal_eval(self.chips)
+        else:
+            chips = {
+                "black": 10,
+                "green": 10,
+                "blue": 10,
+                "red": 10,
+                "pink": 10,
+                "white": 10
+            }
+        self.chips = None
+        request_session().commit()
+        return chips
+
+    def set_chips(self, chips):
+        self.chips = str(chips)
+        request_session().commit()
 
 
 class RoomModel(OrmModelBase):

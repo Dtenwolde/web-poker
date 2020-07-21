@@ -66,6 +66,7 @@
     <script>
         const ROOM_ID = "{{ room.id }}";
         const GAME_URL = "{{ url_for('poker.game', room_id=room.id) }}";
+        const USER_NAME = "{{ session_user().username }}";
     </script>
     <script src="{{ url_for("static", filename="game.js") }}"></script>
 {% endblock %}

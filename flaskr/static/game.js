@@ -83,7 +83,7 @@ function PokerTable() {
             "state": "",
             "balance": 0,
             "name": "",
-            "hand": []
+            "hand": null,
         }],
         active_player: "",
         started: false
@@ -94,6 +94,10 @@ function PokerTable() {
     this.fadeMessages = [];
 
     this.setState = function(data) {
+        if (this.state.active_player !== USER_NAME && data.active_player === USER_NAME) {
+            audioFiles["notify"].play();
+        }
+
         this.state = {
             ...data,
         };
@@ -234,6 +238,11 @@ function placeCommunityCard(index) {
     let tableCardWidth = 60;
     let tableCardHeight = 90;
 
+    if (pokerTable.community_card_flip_ticks[index] === COMMUNITY_CARD_FLIP_MAXTICKS) {
+        audioFiles[`flip_card_${index % 2}`].currentTime = 0.0;
+        audioFiles[`flip_card_${index % 2}`].play();
+    }
+
     context.fillStyle = "beige";
     if (pokerTable.community_card_flip_ticks[index] > 0) {
         let half = COMMUNITY_CARD_FLIP_MAXTICKS / 2;
@@ -262,6 +271,7 @@ canvas.addEventListener("click", (e) => console.log(getRelativeMousePosition(can
 
 
 let images = {};
+let audioFiles = {};
 let pokerTable = new PokerTable();
 
 function initialize() {
@@ -299,13 +309,18 @@ function initialize() {
         });
     });
 
+    audioFiles["flip_card_0"] = new Audio(`/static/audio/flip_card.mp3`);
+    audioFiles["flip_card_1"] = new Audio(`/static/audio/flip_card.mp3`);
+    audioFiles["begin"] = new Audio(`/static/audio/begin.mp3`);
+    audioFiles["notify"] = new Audio(`/static/audio/notify.mp3`);
+
     /*
      * Register all socket.io functions to the pokerTable object.
      */
     socket.on("table_state", (data) => {
         pokerTable.setState(data);
         updateChips();
-        document.getElementById("call-button").innerHTML = "Call with " + pokerTable.state.to_call
+        document.getElementById("call-button").innerHTML = "Call with " + (pokerTable.state.to_call / 100)
     });
     socket.on("message", (data) => {
         pokerTable.fadeMessages.push({
@@ -322,6 +337,7 @@ function initialize() {
     // Load all chips
     let chips = ["black", "blue", "green", "pink", "red", "white"];
     let div = document.getElementById("chip-wrapper");
+    div.innerHTML = "";
     chips.forEach((chip) => {
         div.innerHTML += `
             <div class="chip-display">
@@ -388,6 +404,7 @@ function beginRound() {
 socket.on("begin", (data) => {
     // Reset flip animation ticks
     pokerTable.community_card_flip_ticks = [...INITIAL_COMMUNITY_CARD_FLIPTICKS];
+    audioFiles["begin"].play();
 });
 
 socket.emit("join", {
@@ -423,3 +440,25 @@ function showSliderValue() {
     let bulletPosition = (rangeSlider.value / rangeSlider.max);
     rangeBullet.style.left = (bulletPosition * 200) + "px";
 }
+
+document.addEventListener("keydown", (ev) => {
+    let increment = 1;
+    if (ev.ctrlKey) {
+        increment = 10;
+    } else if (ev.shiftKey) {
+        increment = 50;
+    }
+
+    if (ev.key === "ArrowLeft") {
+        rangeSlider.value -= increment;
+    } else if (ev.key === "ArrowRight") {
+        rangeSlider.value = 1*rangeSlider.value + increment;
+    } else if (ev.key === "c") {
+        call();
+    } else if (ev.key === "r") {
+        raise();
+    } else if (ev.key === "f") {
+        fold();
+    }
+    showSliderValue();
+});

@@ -2,6 +2,7 @@ from enum import Enum
 
 from flaskr import sio
 from flaskr.lib.game import Evaluator
+from flaskr.lib.game.Exceptions import PokerException
 from flaskr.lib.game.Player import Player
 from flaskr.lib.game.chip_utils import get_value
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
@@ -12,12 +13,6 @@ from flaskr.lib.models.models import UserModel
 
 SMALL_BLIND_CALL_VALUE = 200
 MINIMUM_RAISE = 100
-
-
-class PokerException(Exception):
-    def __init__(self, message=""):
-        super().__init__(message)
-        self.message = message
 
 
 class Phases(Enum):
@@ -153,6 +148,9 @@ class PokerTable:
         for player in winning_players:
             player.payout(shared_pot)
 
+        for player in self.player_list:
+            player.original_chips = player.chips.copy()
+
         self.phase = Phases.NOT_YET_STARTED
 
         self.update_players()
@@ -196,7 +194,7 @@ class PokerTable:
             self.first = False
             chips = player.pay(self.current_call_value)  # Current small blind
             if chips is not None:
-                self.broadcast("%s started the round with %d." % (player.user.username, self.current_call_value))
+                self.broadcast("%s started the round with %d." % (player.user.username, self.current_call_value / 100))
                 self.add_pot(chips)
                 self.current_call_value = SMALL_BLIND_CALL_VALUE * 2  # In cents
             else:
@@ -208,6 +206,9 @@ class PokerTable:
             chips = player.pay(self.current_call_value)
             if chips is not None:
                 self.action_call(chips, player, self.current_call_value - orig_value)
+            elif self.all_in:
+                chips = player.pay(player.sum_chips())
+                self.action_call(chips, player, player.sum_chips() - orig_value)
             else:
                 self.action_fold(player)
                 message = "Folded, not enough currency to match the call value."
@@ -365,16 +366,6 @@ class PokerTable:
 
         return best_cards[0:5]
 
-    def handle_tie_breaker(self, tie_players, highest_score):
-        print(tie_players[0].hand)
-        if highest_score == HandRanking.ROYAL_FLUSH:
-            return "split"
-        if highest_score == HandRanking.STRAIGHT_FLUSH:
-            for player in tie_players:
-                print("\n\n\n\n", player.hand)
-
-        return tie_players[0]
-
     def action_raise(self, chips, player, value):
         if player.sum_chips() == 0:
             self.all_in = True
@@ -448,3 +439,7 @@ class PokerTable:
             })
 
         return data
+
+    def cleanup(self):
+        for player in self.player_list:
+            player.leave()

@@ -59,5 +59,10 @@ def create_app(test_config=None):
     app.register_blueprint(poker.bp)
     app.add_url_rule('/', endpoint='index')
 
-
 create_app()
+
+
+def cleanup():
+    from flaskr.mysocket import tables
+    for table in tables.values():
+        table.cleanup()
