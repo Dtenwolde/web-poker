@@ -328,7 +328,7 @@ class PokerTable:
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
             "hand": player.export_hand(),
-            "hands": visible_hands,
+            "players": self.export_player_game_data(player),
             "chips": player.chips,
             "chip_sum": player.sum_chips(),
             "to_call": self.current_call_value - player.current_call_value,
@@ -425,3 +425,32 @@ class PokerTable:
     def update_players(self):
         for player in self.player_list:
             sio.emit("table_state", self.export_state(player), json=True, room=player.socket)
+
+    def export_player_game_data(self, player):
+        data = []
+
+        for other in self.player_list:
+            if other == player:
+                continue
+
+            if other in self.fold_list:
+                state = "Folded"
+            elif other in self.caller_list:
+                state = "Called"
+            else:
+                state = "Waiting"
+
+            if self.phase == Phases.NOT_YET_STARTED:
+                hand = player.export_hand()
+            else:
+                hand = None
+
+            data.append({
+                "active": self.get_current_player() == other,
+                "name": other.user.username,
+                "state": state,
+                "balance": other.user.balance,
+                "hand": hand
+            })
+
+        return data

@@ -79,7 +79,12 @@ function PokerTable() {
     this.state = {
         community_cards: [],
         hand: [],
-        hands: [null, null, null, null],
+        players: [{
+            "state": "",
+            "balance": 0,
+            "name": "",
+            "hand": []
+        }],
         active_player: "",
         started: false
     };
@@ -139,22 +144,44 @@ function drawPlayerHand(i) {
         {x: 765, y: 479.26666259765625}
     ];
 
-    let hand = pokerTable.state.hands[i];
+    let player = pokerTable.state.players[i];
     let pos = positions[i];
 
+    const cardWidth = CARD_WIDTH * .4;
 
     context.translate(pos.x, pos.y);
     // 0.785398163 == 45 radians
     context.rotate((i + 1) * 0.785398163);
-    if (hand === null) {
-        context.drawImage(images["cardback"], 0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
-        context.drawImage(images["cardback"], 20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+    if (player.hand === null) {
+        context.drawImage(images["cardback"], 0, 0, cardWidth, CARD_HEIGHT * .4);
+        context.drawImage(images["cardback"], 20, 10, cardWidth, CARD_HEIGHT * .4);
     } else {
         context.fillStyle = "beige";
-        context.fillRect(0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
-        context.drawImage(images[`${hand[0].rank}_of_${hand[0].suit}`], 0, 0, CARD_WIDTH * .4, CARD_HEIGHT * .4);
-        context.fillRect(20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
-        context.drawImage(images[`${hand[1].rank}_of_${hand[1].suit}`], 20, 10, CARD_WIDTH * .4, CARD_HEIGHT * .4);
+        context.fillRect(0, 0, cardWidth, CARD_HEIGHT * .4);
+        context.drawImage(images[`${player.hand[0].rank}_of_${player.hand[0].suit}`], 0, 0, cardWidth, CARD_HEIGHT * .4);
+        context.fillRect(20, 10, cardWidth, CARD_HEIGHT * .4);
+        context.drawImage(images[`${player.hand[1].rank}_of_${player.hand[1].suit}`], 20, 10, cardWidth, CARD_HEIGHT * .4);
+    }
+
+    if (!player.active)
+        context.fillStyle = "black";
+    else
+        context.fillStyle = "darkred";
+
+    if (i >= 2 && i <= 4) {
+        // Flip text drawing right side up
+        context.rotate(3.141592652);
+        context.translate(-cardWidth, 60);
+    }
+
+    context.font = "20px Arial";
+    context.fillText(player.name, 0, -36);
+    context.font = "16px Arial";
+    context.fillText(player.state, 0, -16);
+
+    if (i >= 2 && i <= 4) {
+        context.translate(cardWidth, -60);
+        context.rotate(3.141592652);
     }
 
     context.rotate((i + 1) * -0.785398163);
@@ -173,7 +200,7 @@ function render() {
         placeCommunityCard(i);
     }
 
-    for (let i = 0; i < pokerTable.state.hands.length; i++) {
+    for (let i = 0; i < pokerTable.state.players.length; i++) {
         drawPlayerHand(i);
     }
 
