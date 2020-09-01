@@ -10,7 +10,7 @@ Then, activate the environment;
 
 For linux
 
-    ./venv/bin/activate
+    source ./venv/bin/activate
     
 For windows
    
