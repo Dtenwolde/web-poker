@@ -88,7 +88,7 @@ function PokerTable() {
         active_player: "",
         started: false,
         you: "name",
-        chip_sum: 0,
+        balance: 0,
         to_call: 0,
     };
 
@@ -241,7 +241,7 @@ function render() {
     context.fillStyle = "black";
     context.font = "20px Arial";
     context.fillText(`Current turn: ${pokerTable.state.active_player}`, 10, 20);
-    context.fillText(`Pot: ${pokerTable.state.pot_sum}`, 378.1000061035156, 172.26666259765625 )
+    context.fillText(`Pot: ${pokerTable.state.pot}`, 378.1000061035156, 172.26666259765625 )
 
     pokerTable.drawFadeMessages();
 
@@ -338,7 +338,7 @@ function initialize() {
     socket.on("table_state", (data) => {
         pokerTable.setState(data);
 
-        rangeSlider.max = pokerTable.state.chip_sum;
+        rangeSlider.max = pokerTable.state.balance;
 
         document.getElementById("call-button").innerHTML = "Call with " + (pokerTable.state.to_call)
     });
