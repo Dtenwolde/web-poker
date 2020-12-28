@@ -312,6 +312,7 @@ class PokerTable:
 
     def export_state(self, player: Player):
         return {
+            "you": player.user.username,
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
             "pot": self.pot,
@@ -415,9 +416,6 @@ class PokerTable:
         data = []
 
         for other in self.player_list:
-            if other == player:
-                continue
-
             if other in self.fold_list:
                 state = "Folded"
             elif other in self.caller_list:

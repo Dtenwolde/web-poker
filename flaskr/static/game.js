@@ -86,7 +86,8 @@ function PokerTable() {
             "hand": null,
         }],
         active_player: "",
-        started: false
+        started: false,
+        you: "name"
     };
 
     this.community_card_flip_ticks = [...INITIAL_COMMUNITY_CARD_FLIPTICKS];
@@ -134,7 +135,7 @@ function PokerTable() {
 }
 
 
-function drawPlayerHand(i) {
+function drawPlayerHand(i, player) {
     /*
      * This supports up to 7 other player hands.
      */
@@ -148,7 +149,6 @@ function drawPlayerHand(i) {
         {x: 765, y: 479.26666259765625}
     ];
 
-    let player = pokerTable.state.players[i];
     let pos = positions[i];
 
     const cardWidth = CARD_WIDTH * .4;
@@ -204,8 +204,20 @@ function render() {
         placeCommunityCard(i);
     }
 
+    // Get your position on the table.
+    let userPos = -1;
     for (let i = 0; i < pokerTable.state.players.length; i++) {
-        drawPlayerHand(i);
+        if (pokerTable.state.you === pokerTable.state.players[i]) {
+            userPos = i;
+        }
+    }
+
+    // Place other players cards relative to your position
+    for (let i = 0; i < pokerTable.state.players.length; i++) {
+        let pos = (i + userPos + 8) % 8
+
+        let player = pokerTable.state.players[i];
+        drawPlayerHand(pos, player);
     }
 
 
