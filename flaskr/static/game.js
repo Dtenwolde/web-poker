@@ -87,7 +87,9 @@ function PokerTable() {
         }],
         active_player: "",
         started: false,
-        you: "name"
+        you: "name",
+        chip_sum: 0,
+        to_call: 0,
     };
 
     this.community_card_flip_ticks = [...INITIAL_COMMUNITY_CARD_FLIPTICKS];
@@ -207,19 +209,23 @@ function render() {
     // Get your position on the table.
     let userPos = -1;
     for (let i = 0; i < pokerTable.state.players.length; i++) {
-        if (pokerTable.state.you === pokerTable.state.players[i]) {
+        if (pokerTable.state.you === pokerTable.state.players[i].name) {
             userPos = i;
         }
     }
 
     // Place other players cards relative to your position
     for (let i = 0; i < pokerTable.state.players.length; i++) {
-        let pos = (i + userPos + 8) % 8
+        if (pokerTable.state.you === pokerTable.state.players[i].name) continue;
+
+        let pos = i;
+        if (pos > userPos) pos--;
+
+        pos = (pos - userPos + 7) % 7;
 
         let player = pokerTable.state.players[i];
         drawPlayerHand(pos, player);
     }
-
 
     let handCardWidth = 100;
     let handCardHeight = 150;
@@ -331,8 +337,10 @@ function initialize() {
      */
     socket.on("table_state", (data) => {
         pokerTable.setState(data);
-        updateChips();
-        document.getElementById("call-button").innerHTML = "Call with " + (pokerTable.state.to_call / 100)
+
+        rangeSlider.max = pokerTable.state.chip_sum;
+
+        document.getElementById("call-button").innerHTML = "Call with " + (pokerTable.state.to_call)
     });
     socket.on("message", (data) => {
         pokerTable.fadeMessages.push({
@@ -345,31 +353,6 @@ function initialize() {
     socket.emit("table_state", {
         "room": ROOM_ID
     });
-
-    // Load all chips
-    let chips = ["black", "blue", "green", "pink", "red", "white"];
-    let div = document.getElementById("chip-wrapper");
-    div.innerHTML = "";
-    chips.forEach((chip) => {
-        div.innerHTML += `
-            <div class="chip-display">
-                <div class="chip-image-wrapper">
-                    <img class="chip-image" src="/static/images/chips/${chip}_chip.png"/>
-                </div>
-                <div class="chip-bottom" id="chip-value-${chip}">0 left.</div>
-            </div>
-        `;
-    });
-}
-
-function updateChips() {
-    let chips = ["black", "blue", "green", "pink", "red", "white"];
-
-    chips.forEach((chip) => {
-        document.getElementById(`chip-value-${chip}`).innerHTML = `${pokerTable.state.chips[chip]} left.`
-    });
-
-    rangeSlider.max = pokerTable.state.chip_sum / 100;
 }
 
 function postInit() {
@@ -378,7 +361,7 @@ function postInit() {
 
 
 function raise() {
-    sendAction("raise", rangeSlider.value * 100);
+    sendAction("raise", rangeSlider.value);
 }
 
 function fold() {
