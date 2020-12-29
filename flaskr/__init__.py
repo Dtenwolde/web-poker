@@ -47,7 +47,7 @@ def create_app(test_config=None):
     # Import database and set it up.
     import flaskr.lib.database
     flaskr.lib.database.register_teardown(app)
-    flaskr.lib.database.init_db("sqlite:///storage/database.sql")
+    flaskr.lib.database.init_db("sqlite:///storage/database.db")
 
     # Create models from model objects as defined in models.py
     flaskr.lib.database.metadata_create_all()

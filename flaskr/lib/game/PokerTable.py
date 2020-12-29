@@ -4,15 +4,14 @@ from flaskr import sio
 from flaskr.lib.game import Evaluator
 from flaskr.lib.game.Exceptions import PokerException
 from flaskr.lib.game.Player import Player
-from flaskr.lib.game.chip_utils import get_value
 from flaskr.lib.game.Card import CardSuits, Card, CardRanks
 import random
 from typing import Optional, List
 
 from flaskr.lib.models.models import UserModel
 
-SMALL_BLIND_CALL_VALUE = 200
-MINIMUM_RAISE = 100
+SMALL_BLIND_CALL_VALUE = 2
+MINIMUM_RAISE = 1
 
 
 class Phases(Enum):
@@ -36,6 +35,18 @@ class HandRanking:
     HIGH_CARD = 8
 
 
+def deck_generator():
+    deck = []
+
+    for suit in [suit for suit in dir(CardSuits) if not suit.startswith("__")]:
+        for rank in [rank for rank in dir(CardRanks) if not rank.startswith("__")]:
+            deck.append(Card(CardRanks[rank], CardSuits[suit]))
+
+    # TODO: Use a non-crackable shuffle function instead
+    random.shuffle(deck)
+    return deck
+
+
 class PokerTable:
     """
     Stores information about the poker game being played
@@ -54,7 +65,7 @@ class PokerTable:
         self.community_cards: List[Card] = []
 
         self.first = True
-        self.pot = {}
+        self.pot = 0
         self.current_call_value = SMALL_BLIND_CALL_VALUE
         self.active_player_index = 0
 
@@ -64,27 +75,24 @@ class PokerTable:
         """
         Initializes the Poker game, resets the pot to 0
 
-        :return: An error string, or None if no error occured.
+        :return: An error string, or None if no error occurred.
         """
+
+        for player in self.player_list[:]:
+            if player.balance == 0:
+                self.player_list.remove(player)
+                # TODO: Update player value in db
+            else:
+                player.reset()
         if len(self.player_list) < 2:
             raise PokerException("Need at least two players to start the game.")
 
-        for player in self.player_list:
-            player.reset()
 
         # TODO: add pay
-        self.deck = self.deck_generator()
+        self.deck = deck_generator()
         self.deal_cards()
 
         self.phase = Phases.PRE_FLOP
-        self.pot = {
-            "black": 0,
-            "green": 0,
-            "blue": 0,
-            "red": 0,
-            "pink": 0,
-            "white": 0
-        }
         self.current_call_value = SMALL_BLIND_CALL_VALUE
 
         self.first = True
@@ -135,21 +143,17 @@ class PokerTable:
                             break
                     if equal:
                         winning_players.append(player)
-
-
         else:
             winning_players = [self.caller_list[0]]
 
         shared_pot = self.payout_pot(len(winning_players))
+        print(shared_pot)
 
         self.broadcast("%s won." % ",".join([player.user.username for player in winning_players]))
 
         # Payout the game
         for player in winning_players:
             player.payout(shared_pot)
-
-        for player in self.player_list:
-            player.original_chips = player.chips.copy()
 
         self.phase = Phases.NOT_YET_STARTED
 
@@ -192,37 +196,35 @@ class PokerTable:
                 raise ValueError("The small blind was not the first player to do an action.")
 
             self.first = False
-            chips = player.pay(self.current_call_value)  # Current small blind
-            if chips is not None:
-                self.broadcast("%s started the round with %d." % (player.user.username, self.current_call_value / 100))
-                self.add_pot(chips)
+            paid = player.pay(self.current_call_value)  # Current small blind
+            if paid != 0:
+                self.broadcast("%s started the round with %d." % (player.user.username, self.current_call_value))
+                self.add_pot(paid)
                 self.current_call_value = SMALL_BLIND_CALL_VALUE * 2  # In cents
             else:
                 raise ValueError("Programmer error: please check the player balances before starting the next round.")
 
         elif action == "call":
-            orig_value = player.current_call_value
-
-            chips = player.pay(self.current_call_value)
-            if chips is not None:
-                self.action_call(chips, player, self.current_call_value - orig_value)
-            elif self.all_in:
-                chips = player.pay(player.sum_chips())
-                self.action_call(chips, player, player.sum_chips() - orig_value)
+            if player.all_in:
+                self.action_call(player, 0)
             else:
-                self.action_fold(player)
-                message = "Folded, not enough currency to match the call value."
+                paid = player.pay(self.current_call_value)
+
+                self.action_call(player, paid)
+                # self.action_fold(player)
+                # message = "Folded, not enough currency to match the call value."
 
         elif action == "raise":
-            if self.all_in:
-                return "Cannot raise when all-in already happened."
+            difference = player.current_call_value + value - self.current_call_value
+            if difference <= 0:
+                return "Raise of %d not high enough." % value
 
-            if value < MINIMUM_RAISE:
-                return "Minimum raise is 1 euro."
-
-            chips = player.pay(self.current_call_value + value)
-            if chips is not None:
-                self.action_raise(chips, player, value)
+            paid = player.pay(self.current_call_value + difference)
+            if paid != 0:
+                self.add_pot(paid)
+                self.current_call_value += difference
+                self.caller_list = [player]
+                self.broadcast("%s raised by %d." % (player.user.username, difference))
             else:
                 return "Cannot raise by %d." % value
 
@@ -248,17 +250,6 @@ class PokerTable:
 
     def get_current_player(self):
         return self.player_list[self.active_player_index]
-
-    def deck_generator(self):
-        deck = []
-
-        for suit in [suit for suit in dir(CardSuits) if not suit.startswith("__")]:
-            for rank in [rank for rank in dir(CardRanks) if not rank.startswith("__")]:
-                deck.append(Card(CardRanks[rank], CardSuits[suit]))
-
-        # TODO: Use a non-crackable shuffle function instead
-        random.shuffle(deck)
-        return deck
 
     def deal_cards(self):
         # First round
@@ -296,8 +287,8 @@ class PokerTable:
     def get_big_blind(self):
         return self.player_list[(self.small_blind_index + 1) % len(self.player_list)]
 
-    def add_pot(self, chips):
-        self.pot = {k: self.pot.get(k, 0) + chips.get(k, 0) for k in set(chips) | set(self.pot)}
+    def add_pot(self, value: int):
+        self.pot += value
 
     def check_phase_finish(self):
         if len(self.player_list) != len(self.fold_list) + len(self.caller_list):
@@ -316,7 +307,6 @@ class PokerTable:
             "small_blind": self.get_small_blind().user.username,
             "current_call_value": self.current_call_value,
             "pot": self.pot,
-            "pot_sum": sum(get_value(key) * amount for key, amount in self.pot.items()) / 100,
             "phase": self.phase.name.capitalize(),
             "active_player_index": self.active_player_index,
             "active_player": self.get_current_player().user.username,
@@ -324,9 +314,8 @@ class PokerTable:
             "fold_list": [player.user.username for player in self.fold_list],
             "caller_list": [player.user.username for player in self.caller_list],
             "hand": player.export_hand(),
-            "players": self.export_player_game_data(player),
-            "chips": player.chips,
-            "chip_sum": player.sum_chips(),
+            "players": self.export_player_game_data(),
+            "balance": player.balance,
             "to_call": (self.current_call_value - player.current_call_value),
             "started": self.phase != Phases.NOT_YET_STARTED
         }
@@ -367,14 +356,11 @@ class PokerTable:
 
         return best_cards[0:5]
 
-    def action_raise(self, chips, player, value):
-        if player.sum_chips() == 0:
-            self.all_in = True
-
-        self.add_pot(chips)
-        self.current_call_value += value
-        self.caller_list = [player]
-        self.broadcast("%s raised by %d." % (player.user.username, value / 100))
+    # def action_raise(self, player, value):
+    #     self.add_pot(value)
+    #     self.current_call_value += value
+    #     self.caller_list = [player]
+    #     self.broadcast("%s raised to %d." % (player.user.username, value))
 
     def action_fold(self, player: Player):
         """
@@ -390,29 +376,22 @@ class PokerTable:
             return False
         return True
 
-    def action_call(self, chips, player, value):
-        self.add_pot(chips)
+    def action_call(self, player, value):
+        self.pot += value
         self.caller_list.append(player)
-        self.broadcast("%s called %d." % (player.user.username, value / 100))
+        self.broadcast("%s called %d." % (player.user.username, value))
 
     def payout_pot(self, shares=1):
-        pot = {}
-
-        missed_value = 0
-
-        for key in self.pot.keys():
-            pot[key] = self.pot[key] // shares
-            missed_value += (pot[key] * shares - self.pot[key]) * get_value(key)
-
-        pot["white"] += (missed_value // get_value("white")) // shares
-
-        return pot
+        payout_pot = int(self.pot / shares)
+        leftover = self.pot - (payout_pot * shares)
+        self.pot = leftover
+        return payout_pot
 
     def update_players(self):
         for player in self.player_list:
             sio.emit("table_state", self.export_state(player), json=True, room=player.socket)
 
-    def export_player_game_data(self, player):
+    def export_player_game_data(self):
         data = []
 
         for other in self.player_list:

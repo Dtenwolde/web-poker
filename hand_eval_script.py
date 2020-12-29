@@ -3,7 +3,7 @@ from flaskr.lib.game.Card import Card, CardRanks, CardSuits
 from flaskr.lib.game.PokerTable import PokerTable, HandRanking
 
 poker_table = PokerTable("3")
-deck = poker_table.deck_generator()
+deck = deck_generator()
 
 community_hands = [Card(CardRanks.ACE, CardSuits.DIAMONDS), Card(CardRanks.QUEEN, CardSuits.HEARTS),
                    Card(CardRanks.KING, CardSuits.DIAMONDS),  Card(CardRanks.QUEEN, CardSuits.SPADES),

@@ -46,25 +46,25 @@ class UserModel(OrmModelBase):
             return True
         return False
 
-    def pop_chips(self):
-        if self.chips is not None:
-            chips = literal_eval(self.chips)
-        else:
-            chips = {
-                "black": 10,
-                "green": 10,
-                "blue": 10,
-                "red": 10,
-                "pink": 10,
-                "white": 10
-            }
-        self.chips = None
-        request_session().commit()
-        return chips
+    # def pop_chips(self):
+    #     if self.chips is not None:
+    #         chips = literal_eval(self.chips)
+    #     else:
+    #         chips = {
+    #             "black": 10,
+    #             "green": 10,
+    #             "blue": 10,
+    #             "red": 10,
+    #             "pink": 10,
+    #             "white": 10
+    #         }
+    #     self.chips = None
+    #     request_session().commit()
+    #     return chips
 
-    def set_chips(self, chips):
-        self.chips = str(chips)
-        request_session().commit()
+    # def set_chips(self, chips):
+    #     self.chips = str(chips)
+    #     request_session().commit()
 
 
 class RoomModel(OrmModelBase):

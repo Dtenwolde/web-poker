@@ -16,13 +16,8 @@ class Player:
         self.socket = socket
 
         self.hand = []
-        self.chips = user.pop_chips()
-
-        if self.chips is None:
-            raise PokerException("This user does not have any chips (already in another room?)")
-
-        # We need this to roll-back if the table stops without a proper finish.
-        self.original_chips = self.chips.copy()
+        self.balance = user.balance
+        self.all_in = False
 
         self.current_call_value = 0
 
@@ -32,61 +27,27 @@ class Player:
     def reset(self):
         self.hand = []
         self.current_call_value = 0
-        self.chips = self.original_chips.copy()
 
     def pay(self, current_call_value):
         """
-        Pay the current_call_value amount in chips, using a greedy algorithm.
-        Meaning, we look for the greatest amount to fit, and downsize until no chips are left.
         :param current_call_value:
         :return:
         """
         to_pay = current_call_value - self.current_call_value
 
-        keys = ["black", "green", "blue", "red", "pink", "white"]
-        chips = defaultdict(int)
-        chip_idx = 0
-        while to_pay > 0:
-            key = keys[chip_idx]
-            value = get_value(key)
-            while value <= to_pay and self.chips[key] > 0:
-                to_pay -= value
-                chips[key] += 1
-                self.chips[key] -= 1
-
-            chip_idx += 1
-            if chip_idx == len(self.chips.keys()) and to_pay != 0:
-                print(to_pay, key)
-                # If no chip could be broken up to still pay the call value.
-                if not self.check_break_chips():
-                    return None
-                chip_idx -= 1
-
+        if self.balance < to_pay:  # all in
+            paid = self.balance
+            self.balance = 0
+            self.all_in = True
+        else:  # not all in
+            paid = to_pay
+            self.balance -= to_pay
         self.current_call_value = current_call_value
-        return chips
+        return paid
 
-    def check_break_chips(self):
-        """
-        Checks if any chips can be broken up into whites using
-        :return: true if it broke up a chip, false otherwise
-        """
-        keys = ["black", "green", "blue", "red", "pink", "white"]
-
-        for key in keys[:-1]:
-            if self.chips[key] > 0:
-                value = get_value(key)
-                n_whites = value // get_value("white")
-
-                self.chips["white"] += n_whites
-                self.chips[key] -= 1
-                return True
-        return False
-
-    def sum_chips(self):
-        return sum(get_value(key) * amount for key, amount in self.chips.items())
 
     def payout(self, pot):
-        self.chips = {k: pot.get(k, 0) + self.chips.get(k, 0) for k in set(self.chips) | set(pot)}
+        self.balance += pot
 
     def export_hand(self):
         if len(self.hand) == 0:
@@ -94,13 +55,14 @@ class Player:
         return [card.to_json() for card in self.hand]
 
     def leave(self):
+        # TODO
         """
         Call this function if the player leaves the table.
         This will return the chips back to the user.
 
         :return:
         """
-        self.user.set_chips(self.chips)
-        self.chips = None
 
-
+        pass
+        # self.user.set_chips(self.chips)
+        # self.chips = None
